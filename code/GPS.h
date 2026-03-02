@@ -9,33 +9,32 @@
 // GPS数据结构体定义
 struct GPS_struct
 {
-    float lat_zero; //纬度零漂
-    float lon_zero; //经度零漂
-    float current_lat; //自身实时纬度
-    float current_lon; //自身实时经度
+    double lat_zero; //纬度零漂
+    double lon_zero; //经度零漂
+    double current_lat; //自身实时纬度
+    double current_lon; //自身实时经度
     float current_x; //自身实时笛卡尔坐标x
     float current_y; //自身实时笛卡尔坐标y
     float x_offset; //笛卡尔坐标x误差
     float y_offset; //笛卡尔坐标y误差
-    float lat_home; //基准点纬度
-    float lon_home; //基准点经度
+    double lat_home; //基准点纬度
+    double lon_home; //基准点经度
 };
 
 struct GPS_point
 {
     int point_num; // 当前采集的点数
-    float lat[GPS_POINT_MAX]; //纬度
-    float lon[GPS_POINT_MAX]; //经度
+    double lat[GPS_POINT_MAX]; //纬度
+    double lon[GPS_POINT_MAX]; //经度
     float gps_x[GPS_POINT_MAX]; //高斯投影x坐标
     float gps_y[GPS_POINT_MAX]; //高斯投影y坐标
-
+    int point_flag[GPS_POINT_MAX]; //点位标志位 0停车点 1转弯点 2直行点
 };
 
 
 // 全局变量声明
 extern struct GPS_struct gps_data;  // GPS数据全局实例
 extern struct GPS_point gps_point_data; // GPS采样点全局实例
-extern float central_meridian;      // 中央子午线(河南开封: 114°E)
 
 
 // GPS经纬度转投影

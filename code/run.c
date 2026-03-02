@@ -114,7 +114,7 @@ float pid_calculate(struct pid_controller *pid, float target, float actual, floa
     
     return output;
 }
-
+// PID 重置函数 (停止时调用)
 void pid_reset(struct pid_controller *pid)
 {
     pid->integral = 0.0f;
@@ -160,8 +160,8 @@ void Calculate_Differential_Speed(float turn_angle, float n_speed, struct out_mo
     }
 
     // 4. 按半径比例分配速度 (v = ω * r, 角速度ω相同)
-    float ratio_left  = R_left  / R_center_abs;
-    float ratio_right = R_right / R_center_abs;
+    double ratio_left  = R_left  / R_center_abs;
+    double ratio_right = R_right / R_center_abs;
 
     out_motor_speed->l_speed  = n_speed * ratio_left;
     out_motor_speed->r_speed = n_speed * ratio_right;
@@ -237,6 +237,19 @@ void front_wheel_turn(float turn_angle)
 {
 
 }
+
+//**********路线拟合************
+/*直线拟合
+x:点的x坐标数组 y:点的y坐标数组 dis:每点间距 start_index:拟合点的起始索引
+
+*/
+void line_fit(double *x, double *y, int dis,int start_index)
+{
+    
+}
+
+
+
 
 /*
 巡点导航

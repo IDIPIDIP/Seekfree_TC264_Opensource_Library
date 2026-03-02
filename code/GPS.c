@@ -10,7 +10,6 @@
 #define GPS_FLASH_MAGIC                 (0x47505331u) // "GPS1"的ASCII码 用于验证Flash数据有效性
 #define GPS_FLASH_VERSION               (1u)// 数据版本号 用于Flash数据格式升级
 
-float central_meridian = 114.0f; //中央子午线(河南开封: 114°E)
 
 struct GPS_struct gps_data = {0}; // 全局GPS数据实例
 struct GPS_point gps_point_data = {0}; // 全局GPS采样点实例
@@ -37,8 +36,8 @@ int gps_init()
         return 0;
     }
 
-    gps_data.lat_zero /= (float)valid_count;
-    gps_data.lon_zero /= (float)valid_count;
+    gps_data.lat_zero /= (double)valid_count;
+    gps_data.lon_zero /= (double)valid_count;
     gps_data.lat_home = gps_data.lat_zero;// 将零漂值作为基准点
     gps_data.lon_home = gps_data.lon_zero;// 将零漂值作为基准点
 
@@ -46,7 +45,7 @@ int gps_init()
 }
 
 
-//采点,成功返回1,失败返回0
+//采点,成功返回1,失败返回0,不包含标志位
 int getpoint()
 {
     if(gps_point_data.point_num >= GPS_POINT_MAX)
@@ -117,7 +116,8 @@ uint8 gps_save_to_flash(void)
         return 0;
     }
 
-    uint32 write_buffer[1 + 1 + 1 + 1 + 1 + 2 * GPS_POINT_MAX];
+    // Buffer大小: magic(1) + version(1) + point_num(1) + lat_zero(2) + lon_zero(2) + points(4*MAX)
+    uint32 write_buffer[1 + 1 + 1 + 2 + 2 + 4 * GPS_POINT_MAX];
     uint32 index = 0;
     
     write_buffer[index++] = GPS_FLASH_MAGIC;
@@ -126,20 +126,27 @@ uint8 gps_save_to_flash(void)
     // 保存点位数
     write_buffer[index++] = (uint32)gps_point_data.point_num;
     
-    // 保存零漂值
-    flash_data_union temp;
-    temp.float_type = gps_data.lat_zero;
-    write_buffer[index++] = temp.uint32_type;
-    temp.float_type = gps_data.lon_zero;
-    write_buffer[index++] = temp.uint32_type;
+    // 保存零漂值 (double需要2个uint32)
+    union { double d; uint32 u[2]; } temp_d;
     
-    // 保存所有点的经纬度
+    temp_d.d = gps_data.lat_zero;
+    write_buffer[index++] = temp_d.u[0];
+    write_buffer[index++] = temp_d.u[1];
+    
+    temp_d.d = gps_data.lon_zero;
+    write_buffer[index++] = temp_d.u[0];
+    write_buffer[index++] = temp_d.u[1];
+    
+    // 保存所有点的经纬度 (每个double需要2个uint32)
     for(int i = 0; i < gps_point_data.point_num; i++)
     {
-        temp.float_type = gps_point_data.lat[i];
-        write_buffer[index++] = temp.uint32_type;
-        temp.float_type = gps_point_data.lon[i];
-        write_buffer[index++] = temp.uint32_type;
+        temp_d.d = gps_point_data.lat[i];
+        write_buffer[index++] = temp_d.u[0];
+        write_buffer[index++] = temp_d.u[1];
+        
+        temp_d.d = gps_point_data.lon[i];
+        write_buffer[index++] = temp_d.u[0];
+        write_buffer[index++] = temp_d.u[1];
     }
 
     write_buffer[index++] = gps_flash_checksum(write_buffer, index);
@@ -163,11 +170,11 @@ uint8 gps_load_from_flash(void)
         return 0;  // Flash为空，无数据
     }
     
-    uint32 read_buffer[1 + 1 + 1 + 1 + 1 + 2 * GPS_POINT_MAX];
-    flash_read_page(GPS_FLASH_SECTOR, GPS_FLASH_PAGE, read_buffer, (uint16)(1 + 1 + 1 + 1 + 1 + 2 * GPS_POINT_MAX));
+    // Buffer大小: magic(1) + version(1) + point_num(1) + lat_zero(2) + lon_zero(2) + points(4*MAX)
+    uint32 read_buffer[1 + 1 + 1 + 2 + 2 + 4 * GPS_POINT_MAX];
+    flash_read_page(GPS_FLASH_SECTOR, GPS_FLASH_PAGE, read_buffer, (uint16)(1 + 1 + 1 + 2 + 2 + 4 * GPS_POINT_MAX));
     
     uint32 index = 0;
-    flash_data_union temp;
     
     if(read_buffer[index++] != GPS_FLASH_MAGIC)
     {
@@ -186,19 +193,27 @@ uint8 gps_load_from_flash(void)
         return 0;  // 数据异常
     }
     
-    // 读取零漂值
-    temp.uint32_type = read_buffer[index++];
-    gps_data.lat_zero = temp.float_type;
-    temp.uint32_type = read_buffer[index++];
-    gps_data.lon_zero = temp.float_type;
+    // 读取零漂值 (double需要2个uint32)
+    union { double d; uint32 u[2]; } temp_d;
     
-    // 读取所有点的经纬度
+    temp_d.u[0] = read_buffer[index++];
+    temp_d.u[1] = read_buffer[index++];
+    gps_data.lat_zero = temp_d.d;
+    
+    temp_d.u[0] = read_buffer[index++];
+    temp_d.u[1] = read_buffer[index++];
+    gps_data.lon_zero = temp_d.d;
+    
+    // 读取所有点的经纬度 (每个double需要2个uint32)
     for(int i = 0; i < gps_point_data.point_num; i++)
     {
-        temp.uint32_type = read_buffer[index++];
-        gps_point_data.lat[i] = temp.float_type;
-        temp.uint32_type = read_buffer[index++];
-        gps_point_data.lon[i] = temp.float_type;
+        temp_d.u[0] = read_buffer[index++];
+        temp_d.u[1] = read_buffer[index++];
+        gps_point_data.lat[i] = temp_d.d;
+        
+        temp_d.u[0] = read_buffer[index++];
+        temp_d.u[1] = read_buffer[index++];
+        gps_point_data.lon[i] = temp_d.d;
     }
 
     if(read_buffer[index] != gps_flash_checksum(read_buffer, index))
