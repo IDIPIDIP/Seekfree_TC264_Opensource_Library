@@ -102,7 +102,19 @@ float get_yaw_dis(float x1, float y1, float x2, float y2)
     return sqrtf((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
+// ===================== 辅助函数：数据校验码 =====================
 
+// 计算数据校验码 用于验证Flash数据完整性
+static uint32 gps_flash_checksum(const uint32 *data, uint32 len)
+{
+    uint32 checksum = 0;
+    uint32 i = 0;
+    for(i = 0; i < len; i++)
+    {
+        checksum ^= data[i] + (i * 0x9E3779B9u);
+    }
+    return checksum;
+}
 
 
 // ===================== Flash 存储功能 =====================
@@ -231,18 +243,6 @@ uint8 gps_load_from_flash(void)
 void gps_clear_flash(void)
 {
     flash_erase_page(GPS_FLASH_SECTOR, GPS_FLASH_PAGE);
-}
-
-// 计算数据校验码 用于验证Flash数据完整性
-static uint32 gps_flash_checksum(const uint32 *data, uint32 len)
-{
-    uint32 checksum = 0;
-    uint32 i = 0;
-    for(i = 0; i < len; i++)
-    {
-        checksum ^= data[i] + (i * 0x9E3779B9u);
-    }
-    return checksum;
 }
 
 // ===================== 偏航角计算功能 =====================

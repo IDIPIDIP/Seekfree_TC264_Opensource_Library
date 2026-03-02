@@ -17,6 +17,8 @@
 #define REAR_SPEED_PID_KI (0.22f)
 #define REAR_SPEED_PID_KD (0.04f)
 
+int fit_point_num = 0; // 拟合点数量
+
 float turn_angle = 0.0f; // 前轮转向角 (度, +左拐, -右拐)
 float n_speed = 3.0f; // 车身期望中心速度 m/s
 int dir = 1; // 运动方向 1前进，0后退
@@ -36,8 +38,8 @@ struct pid_controller
 };
 
 // 左右轮 PID 控制器
-static struct pid_controller left_pid = {REAR_SPEED_PID_KP, REAR_SPEED_PID_KI, REAR_SPEED_PID_KD, 0.0f, 0.0f, MAX_MOTOR_SPEED};
-static struct pid_controller right_pid = {REAR_SPEED_PID_KP, REAR_SPEED_PID_KI, REAR_SPEED_PID_KD, 0.0f, 0.0f, MAX_MOTOR_SPEED};
+struct pid_controller left_pid = {REAR_SPEED_PID_KP, REAR_SPEED_PID_KI, REAR_SPEED_PID_KD, 0.0f, 0.0f, MAX_MOTOR_SPEED};
+struct pid_controller right_pid = {REAR_SPEED_PID_KP, REAR_SPEED_PID_KI, REAR_SPEED_PID_KD, 0.0f, 0.0f, MAX_MOTOR_SPEED};
 
 
 
@@ -50,18 +52,18 @@ struct out_motor_speed
 
 // ===================== 获取实际速度接口 =====================
 // 注意: 需要根据你的编码器或速度估计器接口修改这两个函数
-static float get_left_motor_speed(void)
+float get_left_motor_speed(void)
 {
     // TODO: 从编码器或速度观测器读取实际左轮速度 (m/s)
-    float left_speed = (float)l_encoder / ENCODER_PULSE_PER_REV * 0.77f*100; // 锟斤拷锟斤拷锟斤拷锟斤拷锟矫孔拷锟斤拷锟斤拷锟轿?2048锟斤拷锟斤拷锟斤拷锟杰筹拷为0.77锟阶ｏ拷锟斤拷锟斤拷为10ms锟斤拷锟斤拷锟皆筹拷锟斤拷100转锟斤拷为m/s
+    float left_speed = (float)l_encoder / ENCODER_PULSE_PER_REV * 0.77f*100; //读取编码器计数值并转换为速度 (m/s) 0.77是轮子周长/编码器每转脉冲数 10ms故*100
     l_encoder = 0; // 读取后清零计数值
     return left_speed;
 }
 
-static float get_right_motor_speed(void)
+float get_right_motor_speed(void)
 {
     // TODO: 从编码器或速度观测器读取实际右轮速度 (m/s)
-    float right_speed = (float)r_encoder / ENCODER_PULSE_PER_REV * 0.77f*100; // 锟斤拷锟斤拷锟斤拷锟斤拷锟矫孔拷锟斤拷锟斤拷锟轿2048锟斤拷锟斤拷锟斤拷锟杰筹拷为0.77锟阶ｏ拷锟斤拷锟斤拷为10ms锟斤拷锟斤拷锟皆筹拷锟斤拷100转锟斤拷为m/s
+    float right_speed = (float)r_encoder / ENCODER_PULSE_PER_REV * 0.77f*100;
     r_encoder = 0; // 读取后清零计数值
     return right_speed;
 }
@@ -238,14 +240,32 @@ void front_wheel_turn(float turn_angle)
 
 }
 
-//**********路线拟合************
-/*直线拟合
-x:点的x坐标数组 y:点的y坐标数组 dis:每点间距 start_index:拟合点的起始索引
+//**********路线拟合*********
 
+/*
+直线拟合,从start_index到start_index+1点
+x:点的x坐标数组 y:点的y坐标数组 point_dis:每点间距（实际点间距会小） start_index:拟合点的起始索引
 */
-void line_fit(double *x, double *y, int dis,int start_index)
+void line_fit(double *x, double *y, int point_dis,int start_index)
 {
-    
+    double dis=sqrt((x[start_index+1]-x[start_index])*(x[start_index+1]-x[start_index])+(y[start_index+1]-y[start_index])*(y[start_index+1]-y[start_index]));
+    if(dis/point_dis>(int)(dis/point_dis)) 
+    {
+        fit_point_num = (int)(dis/point_dis) + 1;
+    }
+
+    if(fit_point_num > MAX_FIT_POINTS)
+    {
+        fit_point_num = MAX_FIT_POINTS;
+    }
+
+    // 在两点之间均匀插入fit_point_num个拟合点
+    for(int i=0;i<fit_point_num;i++)
+    {
+        // 参数t从1/(fit_point_num+1)均匀到fit_point_num/(fit_point_num+1)
+        gps_point_data.fit_x[i]=x[start_index]+(x[start_index+1]-x[start_index])*(i+1)/(fit_point_num+1);
+        gps_point_data.fit_y[i]=y[start_index]+(y[start_index+1]-y[start_index])*(i+1)/(fit_point_num+1);
+    }
 }
 
 

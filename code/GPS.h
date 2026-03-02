@@ -5,6 +5,7 @@
 #include "zf_common_headfile.h"
 
 #define GPS_POINT_MAX (40)
+#define MAX_FIT_POINTS (400) // 拟合点数最大值
 
 // GPS数据结构体定义
 struct GPS_struct
@@ -29,8 +30,9 @@ struct GPS_point
     float gps_x[GPS_POINT_MAX]; //高斯投影x坐标
     float gps_y[GPS_POINT_MAX]; //高斯投影y坐标
     int point_flag[GPS_POINT_MAX]; //点位标志位 0停车点 1转弯点 2直行点
+    float fit_x[MAX_FIT_POINTS]; // 拟合点的x坐标数组
+    float fit_y[MAX_FIT_POINTS]; // 拟合点的y坐标数组
 };
-
 
 // 全局变量声明
 extern struct GPS_struct gps_data;  // GPS数据全局实例
