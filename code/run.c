@@ -76,6 +76,14 @@ float get_front_wheel_angle(void)
 }
 
 // ===================== PID 控制函数 =====================
+/**
+ * @brief PID控制器初始化函数
+ * @param pid PID控制器结构体指针
+ * @param kp 比例系数
+ * @param ki 积分系数
+ * @param kd 微分系数
+ * @param output_limit 输出限值 (绝对值)
+ */
 void pid_init(struct pid_controller *pid, float kp, float ki, float kd, float output_limit)
 {
     pid->kp = kp;
@@ -85,7 +93,13 @@ void pid_init(struct pid_controller *pid, float kp, float ki, float kd, float ou
     pid->last_error = 0.0f;
     pid->output_limit = output_limit;
 }
-
+/**
+ * @brief PID计算函数
+ * @param pid PID控制器结构体指针
+ * @param target 目标值
+ * @param actual 实际值
+ * @param dt 时间间隔 (秒)
+ */
 float pid_calculate(struct pid_controller *pid, float target, float actual, float dt)
 {
     float error = target - actual;
@@ -242,11 +256,14 @@ void front_wheel_turn(float turn_angle)
 
 //**********路线拟合*********
 
-/*
-直线拟合,从start_index到start_index+1点
-x:点的x坐标数组 y:点的y坐标数组 point_dis:每点间距（实际点间距会小） start_index:拟合点的起始索引
-*/
-void line_fit(double *x, double *y, int point_dis,int start_index)
+/**
+ * @brief 在两点之间均匀插入拟合点，形成直线
+ * @param x 点的x坐标数组
+ * @param y 点的y坐标数组
+ * @param point_dis 每点间距（实际点间距会小）
+ * @param start_index 拟合点的起始索引
+ */
+void strline_fit(double *x, double *y, int point_dis,int start_index)
 {
     double dis=sqrt((x[start_index+1]-x[start_index])*(x[start_index+1]-x[start_index])+(y[start_index+1]-y[start_index])*(y[start_index+1]-y[start_index]));
     if(dis/point_dis>(int)(dis/point_dis)) 

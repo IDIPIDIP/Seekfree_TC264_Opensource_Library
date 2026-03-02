@@ -15,7 +15,9 @@ struct GPS_struct gps_data = {0}; // 全局GPS数据实例
 struct GPS_point gps_point_data = {0}; // 全局GPS采样点实例
 
 
-//gps初始化零漂 成功返回1
+/**
+ * @brief GPS初始化零漂
+ */
 int gps_init()
 {
     int valid_count = 0;
@@ -45,7 +47,9 @@ int gps_init()
 }
 
 
-//采点,成功返回1,失败返回0,不包含标志位
+/**
+ * @brief 采集GPS点位数据
+ */
 int getpoint()
 {
     if(gps_point_data.point_num >= GPS_POINT_MAX)
@@ -67,7 +71,11 @@ int getpoint()
     }
 }
 
-//将单点经纬度转换为笛卡尔坐标，存到gps_data.current_x和gps_data.current_y中
+/**
+ * @brief 将经纬度转换为笛卡尔坐标
+ * @param latitude 纬度
+ * @param longitude 经度
+ */
 void gps_to_diker(double latitude , double longitude)
 {
     double dis = 0 , angle = 0;
@@ -80,7 +88,9 @@ void gps_to_diker(double latitude , double longitude)
     gps_data.current_y = dis * sin(angle / 180 * 3.1415926);
 }
 
-// 将所有采集的点转换为笛卡尔坐标
+/**
+ * @brief 将所有采集点的经纬度转换为笛卡尔坐标，存到gps_point_data.gps_x和gps_point_data.gps_y中
+ */
 void gps_to_cartesian_all()
 {
     for(int i = 0; i < gps_point_data.point_num; i++)
@@ -96,7 +106,13 @@ void gps_to_cartesian_all()
     }
 }
 
-// 计算投影坐标系中两点之间的距离
+/**
+ * @brief 计算投影坐标系中两点之间的偏航角（方位角）
+ * @param x1 第一个点的X坐标（北向分量）
+ * @param y1 第一个点的Y坐标（东向分量）
+ * @param x2 第二个点的X坐标（北向分量）
+ * @param y2 第二个点的Y坐标（东向分量）
+ */
 float get_yaw_dis(float x1, float y1, float x2, float y2)
 {
     return sqrtf((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -104,7 +120,11 @@ float get_yaw_dis(float x1, float y1, float x2, float y2)
 
 // ===================== 辅助函数：数据校验码 =====================
 
-// 计算数据校验码 用于验证Flash数据完整性
+/**
+ * @brief 计算GPS数据的校验码
+ * @param data 需要计算校验码的数据数组
+ * @param len 数据数组长度
+ */
 static uint32 gps_flash_checksum(const uint32 *data, uint32 len)
 {
     uint32 checksum = 0;
@@ -119,8 +139,10 @@ static uint32 gps_flash_checksum(const uint32 *data, uint32 len)
 
 // ===================== Flash 存储功能 =====================
 
-// 保存GPS数据到Flash (保存点位数、零漂值、所有经纬度)
-// 成功返回1，失败返回0
+/**
+ * @brief 将GPS数据保存到Flash
+ * 成功返回1，失败返回0
+ */
 uint8 gps_save_to_flash(void)
 {
     if(gps_point_data.point_num < 0 || gps_point_data.point_num > GPS_POINT_MAX)
@@ -172,8 +194,10 @@ uint8 gps_save_to_flash(void)
     return 1;
 }
 
-// 从Flash读取GPS数据
-// 成功返回1，失败返回0
+/**
+ * @brief 从Flash读取GPS数据
+ * 成功返回1，失败返回0
+ */
 uint8 gps_load_from_flash(void)
 {
     // 检查是否有数据
@@ -239,19 +263,22 @@ uint8 gps_load_from_flash(void)
     return 1;
 }
 
-// 清除Flash中的GPS数据
+/**
+ * @brief 清除Flash中的GPS数据
+ */
 void gps_clear_flash(void)
 {
     flash_erase_page(GPS_FLASH_SECTOR, GPS_FLASH_PAGE);
 }
 
 // ===================== 偏航角计算功能 =====================
-
-// 计算投影坐标系中两点之间的偏航角（方位角）
-// 参数: index1, index2 - 两个点的索引
-// 返回: 偏航角（0-360度），0度为正北，顺时针增加
-//       东=90度, 南=180度, 西=270度
-// 注意: 正X是北，正Y是东
+/**
+ * @brief 计算投影坐标系中两点之间的偏航角（方位角）
+ * @param x1 第一个点的X坐标（北向分量）
+ * @param y1 第一个点的Y坐标（东向分量）
+ * @param x2 第二个点的X坐标（北向分量）
+ * @param y2 第二个点的Y坐标（东向分量）
+ */
 float get_yaw_angle(float x1, float y1, float x2, float y2)
 {
     
