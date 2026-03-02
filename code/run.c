@@ -8,14 +8,7 @@
 #include "zf_common_typedef.h"
 #include "zf_common_headfile.h"
 
-#define WHEELBASE_L 0.783 // 车辆前轴中心到后轴中心的垂直距离 (单位: 米)
-#define MAX_MOTOR_SPEED 4.24f // 车辆最大速度 (单位: 米/秒)
-#define MAX_MOTOR_PWM 10000 // 电机PWM占空比的最大值 (对应100%占空比)
-#define TRACK_B 0.588f // 车辆左右轮之间的距离 (单位: 米)
-#define MAIN_CONTROL_PERIOD (0.01f) // 主控制周期 (秒) - 10ms
-#define REAR_SPEED_PID_KP (0.95f)
-#define REAR_SPEED_PID_KI (0.22f)
-#define REAR_SPEED_PID_KD (0.04f)
+
 
 int fit_point_num = 0; // 拟合点数量
 
@@ -280,8 +273,8 @@ void strline_fit(double *x, double *y, int point_dis,int start_index)
     for(int i=0;i<fit_point_num;i++)
     {
         // 参数t从1/(fit_point_num+1)均匀到fit_point_num/(fit_point_num+1)
-        gps_point_data.fit_x[i]=x[start_index]+(x[start_index+1]-x[start_index])*(i+1)/(fit_point_num+1);
-        gps_point_data.fit_y[i]=y[start_index]+(y[start_index+1]-y[start_index])*(i+1)/(fit_point_num+1);
+        integrate_point.fit_x[i]=x[start_index]+(x[start_index+1]-x[start_index])*(i+1)/(fit_point_num+1);
+        integrate_point.fit_y[i]=y[start_index]+(y[start_index+1]-y[start_index])*(i+1)/(fit_point_num+1);
     }
 }
 

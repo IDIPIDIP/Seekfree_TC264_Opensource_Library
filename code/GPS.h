@@ -6,6 +6,12 @@
 
 #define GPS_POINT_MAX (40)
 #define MAX_FIT_POINTS (400) // 拟合点数最大值
+#define GPS_INIT_SAMPLE_COUNT           (10)  // GPS初始化时采集的有效样本数量 用于计算零漂
+#define GPS_INIT_MAX_PARSE_RETRY        (500) // GPS初始化时最大解析重试次数 避免死循环
+#define GPS_FLASH_SECTOR                (0)   // 使用第0扇区
+#define GPS_FLASH_PAGE                  (0)   // 使用第0页
+#define GPS_FLASH_MAGIC                 (0x47505331u) // "GPS1"的ASCII码 用于验证Flash数据有效性
+#define GPS_FLASH_VERSION               (1u)// 数据版本号 用于Flash数据格式升级
 
 // GPS数据结构体定义
 struct GPS_struct
@@ -22,6 +28,7 @@ struct GPS_struct
     double lon_home; //基准点经度
 };
 
+// GPS采样点结构体定义
 struct GPS_point
 {
     int point_num; // 当前采集的点数
@@ -30,8 +37,7 @@ struct GPS_point
     float gps_x[GPS_POINT_MAX]; //高斯投影x坐标
     float gps_y[GPS_POINT_MAX]; //高斯投影y坐标
     int point_flag[GPS_POINT_MAX]; //点位标志位 0停车点 1转弯点 2直行点
-    float fit_x[MAX_FIT_POINTS]; // 拟合点的x坐标数组
-    float fit_y[MAX_FIT_POINTS]; // 拟合点的y坐标数组
+    
 };
 
 // 全局变量声明

@@ -6,6 +6,7 @@
 C_SRCS += \
 ../code/GPS.c \
 ../code/init.c \
+../code/integrate.c \
 ../code/meun.c \
 ../code/mode1.c \
 ../code/run.c 
@@ -13,6 +14,7 @@ C_SRCS += \
 OBJS += \
 ./code/GPS.o \
 ./code/init.o \
+./code/integrate.o \
 ./code/meun.o \
 ./code/mode1.o \
 ./code/run.o 
@@ -20,6 +22,7 @@ OBJS += \
 COMPILED_SRCS += \
 ./code/GPS.src \
 ./code/init.src \
+./code/integrate.src \
 ./code/meun.src \
 ./code/mode1.src \
 ./code/run.src 
@@ -27,6 +30,7 @@ COMPILED_SRCS += \
 C_DEPS += \
 ./code/GPS.d \
 ./code/init.d \
+./code/integrate.d \
 ./code/meun.d \
 ./code/mode1.d \
 ./code/run.d 

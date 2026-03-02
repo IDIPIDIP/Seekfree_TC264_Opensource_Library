@@ -3,12 +3,7 @@
 #include "zf_driver_flash.h"
 #include "GPS.h"
 
-#define GPS_INIT_SAMPLE_COUNT           (10)  // GPS初始化时采集的有效样本数量 用于计算零漂
-#define GPS_INIT_MAX_PARSE_RETRY        (500) // GPS初始化时最大解析重试次数 避免死循环
-#define GPS_FLASH_SECTOR                (0)   // 使用第0扇区
-#define GPS_FLASH_PAGE                  (0)   // 使用第0页
-#define GPS_FLASH_MAGIC                 (0x47505331u) // "GPS1"的ASCII码 用于验证Flash数据有效性
-#define GPS_FLASH_VERSION               (1u)// 数据版本号 用于Flash数据格式升级
+
 
 
 struct GPS_struct gps_data = {0}; // 全局GPS数据实例
