@@ -9,7 +9,9 @@ struct integrate
     float y[MAX_FIT_POINTS]; // 融合后点的y坐标数组
     float fit_x[MAX_FIT_POINTS]; // 拟合点的x坐标数组
     float fit_y[MAX_FIT_POINTS]; // 拟合点的y坐标数组
+    float current_x; // 当前点的x坐标
+    float current_y; // 当前点的y坐标
 };
-extern struct integrate integrate_point;// 拟合点全局实例
+extern struct integrate integrate_point;// 融合点全局实例
 
 #endif /* CODE_TINTEGRATE_H_ */
