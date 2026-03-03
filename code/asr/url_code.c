@@ -3,16 +3,16 @@
 #include "url_code.h"
 #include <stdint.h>
 #include <time.h>
+//this file is code by UTF-8
 
-// global buffers and variables declared in header
-uint8_t     wifi_uart_get_data_buffer[1024];                            // wifi½ÓÊÕ»º³åÇø
-char        http_request[1024];                                         // httpĞ­Òé»º³åÇø
-char        time_now_data[32];                                          // µ±Ç°Ê±¼ä´Á
+uint8_t     wifi_uart_get_data_buffer[1024];                            // wifiæ¥æ”¶ç¼“å†²åŒº
+char        http_request[1024];                                         // httpåè®®ç¼“å†²åŒº
+char        time_now_data[32];                                          // å½“å‰æ—¶é—´æˆ³
 char        asr_url_out[512];                                           // websocket_url
-char        host[64] = "iat-api.xfyun.cn";                              // ·şÎñÆ÷µØÖ·
-char        path[64] = "/v2/iat";                                       // ÇëÇóÂ·¾¶
+char        host[64] = "iat-api.xfyun.cn";                              // æœåŠ¡å™¨åœ°å€
+char        path[64] = "/v2/iat";                                       // è¯·æ±‚è·¯å¾„
 
-// ==================== SHA256 ÊµÏÖ ====================
+// ==================== SHA256 å®ç° ====================
 typedef struct {
     uint32_t state[8];
     uint64_t count;
@@ -143,14 +143,14 @@ static void sha256_final(SHA256_CTX *ctx, uint8_t *hash)
     }
 }
 
-// ==================== HMAC-SHA256 ÊµÏÖ ====================
+// ==================== HMAC-SHA256 å®ç° ====================
 static void hmac_sha256(const uint8_t *key, uint32_t key_len, const uint8_t *data, uint32_t data_len, uint8_t *output)
 {
     SHA256_CTX ctx;
     uint8_t k_ipad[64], k_opad[64], hash[32];
     int i;
 
-    // Èç¹ûÃÜÔ¿Ì«³¤£¬ÏÈÓÃSHA256Ëõ¶Ì
+    // å¦‚æœå¯†é’¥å¤ªé•¿ï¼Œå…ˆç”¨SHA256ç¼©çŸ­
     if (key_len > 64) {
         sha256_init(&ctx);
         sha256_update(&ctx, key, key_len);
@@ -159,7 +159,7 @@ static void hmac_sha256(const uint8_t *key, uint32_t key_len, const uint8_t *dat
         key = hash;
     }
 
-    // Ìî³äÃÜÔ¿
+    // å¡«å……å¯†é’¥
     memset(k_ipad, 0, 64);
     memset(k_opad, 0, 64);
     memcpy(k_ipad, key, key_len);
@@ -186,7 +186,7 @@ static void hmac_sha256(const uint8_t *key, uint32_t key_len, const uint8_t *dat
     sha256_final(&ctx, output);
 }
 
-// ==================== Base64 ±àÂëÊµÏÖ ====================
+// ==================== Base64 ç¼–ç å®ç° ====================
 static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static uint32_t base64_encode(const uint8_t *input, uint32_t input_len, char *output, uint32_t output_size)
@@ -214,7 +214,7 @@ static uint32_t base64_encode(const uint8_t *input, uint32_t input_len, char *ou
             output[out_len++] = base64_chars[char_array_4[j]];
     }
 
-    // ²¹Æë '='
+    // è¡¥é½ '='
     int padding = (3 - (input_len % 3)) % 3;
     for (i = 0; i < padding; i++) {
         if (out_len < output_size)
@@ -227,7 +227,7 @@ static uint32_t base64_encode(const uint8_t *input, uint32_t input_len, char *ou
     return out_len;
 }
 
-// ==================== URL±àÂëÊµÏÖ ====================
+// ==================== URLç¼–ç å®ç° ====================
 static void url_encode(const char *input, char *output, uint32_t output_size)
 {
     const char *hex_chars = "0123456789ABCDEF";
@@ -236,14 +236,14 @@ static void url_encode(const char *input, char *output, uint32_t output_size)
     while (*input && out_len + 4 < output_size) {
         char c = *input++;
         
-        // ²»ĞèÒª±àÂëµÄ×Ö·û£º×ÖÄ¸¡¢Êı×Ö¡¢-_.~
+        // ä¸éœ€è¦ç¼–ç çš„å­—ç¬¦ï¼šå­—æ¯ã€æ•°å­—ã€-_.~
         if ((c >= 'A' && c <= 'Z') || 
             (c >= 'a' && c <= 'z') || 
             (c >= '0' && c <= '9') || 
             c == '-' || c == '_' || c == '.' || c == '~') {
             output[out_len++] = c;
         } else {
-            // ĞèÒª±àÂëµÄ×Ö·û×ª»»Îª %HH ¸ñÊ½
+            // éœ€è¦ç¼–ç çš„å­—ç¬¦è½¬æ¢ä¸º %HH æ ¼å¼
             output[out_len++] = '%';
             output[out_len++] = hex_chars[(c >> 4) & 0x0F];
             output[out_len++] = hex_chars[c & 0x0F];
@@ -254,12 +254,12 @@ static void url_encode(const char *input, char *output, uint32_t output_size)
         output[out_len] = '\0';
 }
 
-// ==================== Ê±¼ä´ÁÉú³É£¨RFC1123¸ñÊ½£©====================
-// ÓÃÓÚ´æ´¢´ÓÍøÂç»ñÈ¡µÄÊ±¼ä
+// ==================== æ—¶é—´æˆ³ç”Ÿæˆï¼ˆRFC1123æ ¼å¼ï¼‰====================
+// ç”¨äºå­˜å‚¨ä»ç½‘ç»œè·å–çš„æ—¶é—´
 static char network_time_str[64] = {0};
 static uint8_t network_time_valid = 0;
 
-// ´ÓHTTPÏìÓ¦ÖĞ½âÎöÈÕÆÚ×Ö¶Î (Date: Sun, 03 Mar 2026 10:30:45 GMT)
+// ä»HTTPå“åº”ä¸­è§£ææ—¥æœŸå­—æ®µ (Date: Sun, 03 Mar 2026 10:30:45 GMT)
 static void time_parse_data(char* input, char* time_str)
 {
     const char* dateField = strstr(input, "Date: ");
@@ -274,16 +274,16 @@ static void time_parse_data(char* input, char* time_str)
     time_str[length] = '\0';
 }
 
-// Í¨¹ıWiFi´Ó·şÎñÆ÷»ñÈ¡µ±Ç°Ê±¼ä´Á
+// é€šè¿‡WiFiä»æœåŠ¡å™¨è·å–å½“å‰æ—¶é—´æˆ³
 void time_get_data(void)
 {
-    // ³õÊ¼»¯WiFiÁ¬½Ó
+    // åˆå§‹åŒ–WiFiè¿æ¥
     while(wifi_uart_init(ASR_WIFI_SSID, ASR_WIFI_PASSWORD, WIFI_UART_STATION))
     {
         system_delay_ms(500);
     }
     
-    // Á¬½Óµ½·şÎñÆ÷
+    // è¿æ¥åˆ°æœåŠ¡å™¨
     while(wifi_uart_connect_tcp_servers(
                 ASR_TARGET_IP,
                 ASR_TARGET_PORT,
@@ -292,18 +292,18 @@ void time_get_data(void)
         system_delay_ms(500);
     }
     
-    // ·¢ËÍHTTP HEADÇëÇó»ñÈ¡Ê±¼ä
+    // å‘é€HTTP HEADè¯·æ±‚è·å–æ—¶é—´
     memset(http_request, 0, sizeof(http_request));
     snprintf(http_request, sizeof(http_request), "HEAD / HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n\r\n", ASR_TARGET_IP);
 
     wifi_uart_send_buffer((const uint8_t*)http_request, strlen(http_request));
     
-    // ½ÓÊÕÏìÓ¦
+    // æ¥æ”¶å“åº”
     memset(wifi_uart_get_data_buffer, 0, sizeof(wifi_uart_get_data_buffer));
     system_delay_ms(1000);
     wifi_uart_read_buffer(wifi_uart_get_data_buffer, sizeof(wifi_uart_get_data_buffer));
     
-    // ´ÓHTTPÏìÓ¦ÖĞÌáÈ¡Ê±¼ä
+    // ä»HTTPå“åº”ä¸­æå–æ—¶é—´
     time_parse_data((char*)wifi_uart_get_data_buffer, network_time_str);
     
     if(network_time_str[0] != '\0') {
@@ -313,17 +313,17 @@ void time_get_data(void)
     wifi_uart_disconnect_link();
 }
 
-// »ñÈ¡RFC1123¸ñÊ½µÄÊ±¼ä×Ö·û´®
+// è·å–RFC1123æ ¼å¼çš„æ—¶é—´å­—ç¬¦ä¸²
 static void get_rfc1123_time(char *time_str, uint32_t max_len)
 {
-    // Èç¹ûÒÑÍ¨¹ıÍøÂç»ñÈ¡Ê±¼ä£¬ÔòÖ±½ÓÊ¹ÓÃ
+    // å¦‚æœå·²é€šè¿‡ç½‘ç»œè·å–æ—¶é—´ï¼Œåˆ™ç›´æ¥ä½¿ç”¨
     if(network_time_valid && network_time_str[0] != '\0') {
         strncpy(time_str, network_time_str, max_len - 1);
         time_str[max_len - 1] = '\0';
         return;
     }
     
-    // ·ñÔòÊ¹ÓÃÏµÍ³Ê±¼ä£¨±¸ÓÃ·½°¸£©
+    // å¦åˆ™ä½¿ç”¨ç³»ç»Ÿæ—¶é—´ï¼ˆå¤‡ç”¨æ–¹æ¡ˆï¼‰
     time_t now = time(NULL);
     struct tm *gmt = gmtime(&now);
 
@@ -340,55 +340,55 @@ static void get_rfc1123_time(char *time_str, uint32_t max_len)
              gmt->tm_sec);
 }
 
-// ==================== ¹¹½¨ÈÏÖ¤URL ====================
+// ==================== æ„å»ºè®¤è¯URL ====================
 uint32_t build_asr_auth_url(const char *host, const char *path, char *out_url, uint32_t max_len)
 {
     if (!host || !path || !out_url || max_len < 512)
         return 0;
 
-    // 1. Éú³ÉRFC1123Ê±¼ä´Á
+    // 1. ç”ŸæˆRFC1123æ—¶é—´æˆ³
     char date_str[64];
     get_rfc1123_time(date_str, sizeof(date_str));
 
-    // 2. ¹¹½¨Ç©ÃûµÄÔ­Ê¼×Ö¶Î
-    //    ¸ñÊ½: "host: {host}\ndate: {date}\nGET {path} HTTP/1.1"
+    // 2. æ„å»ºç­¾åçš„åŸå§‹å­—æ®µ
+    //    æ ¼å¼: "host: {host}\ndate: {date}\nGET {path} HTTP/1.1"
     char signature_origin[512];
     snprintf(signature_origin, sizeof(signature_origin),
              "host: %s\ndate: %s\nGET %s HTTP/1.1", host, date_str, path);
 
-    // 3. APIÃÜÔ¿´¦Àí
-    // APISecret ÊÇ base64 ±àÂëµÄ£¬ÕâÀïÖ±½Ó×÷Îª×Ö·û´®Ê¹ÓÃ
+    // 3. APIå¯†é’¥å¤„ç†
+    // APISecret æ˜¯ base64 ç¼–ç çš„ï¼Œè¿™é‡Œç›´æ¥ä½œä¸ºå­—ç¬¦ä¸²ä½¿ç”¨
     uint32_t secret_len = strlen(ASR_APISecret);
 
-    // 4. Ê¹ÓÃHMAC-SHA256¼ÆËãÇ©Ãû
+    // 4. ä½¿ç”¨HMAC-SHA256è®¡ç®—ç­¾å
     uint8_t signature_sha[32];
     hmac_sha256((const uint8_t*)ASR_APISecret, secret_len, (const uint8_t*)signature_origin, strlen(signature_origin), signature_sha);
 
-    // 5. Base64±àÂësignature
+    // 5. Base64ç¼–ç signature
     char signature_b64[64];
     base64_encode(signature_sha, 32, signature_b64, sizeof(signature_b64));
 
-    // 6. ¹¹½¨authorization_origin×Ö·û´®
-    //    ¸ñÊ½: api_key="{api_key}", algorithm="hmac-sha256", headers="host date request-line", signature="{signature}"
+    // 6. æ„å»ºauthorization_originå­—ç¬¦ä¸²
+    //    æ ¼å¼: api_key="{api_key}", algorithm="hmac-sha256", headers="host date request-line", signature="{signature}"
     char authorization_origin[512];
     snprintf(authorization_origin, sizeof(authorization_origin),
              "api_key=\"%s\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"%s\"",
              ASR_APIKey, signature_b64);
 
-    // 7. Base64±àÂë authorization
+    // 7. Base64ç¼–ç  authorization
     char authorization_b64[512];
     uint32_t auth_len = base64_encode((const uint8_t*)authorization_origin, strlen(authorization_origin), authorization_b64, sizeof(authorization_b64));
 
     if (auth_len == 0)
         return 0;
 
-    // 8. URL±àÂë date ºÍ authorization
+    // 8. URLç¼–ç  date å’Œ authorization
     char date_encoded[128];
     char auth_encoded[1024];
     url_encode(date_str, date_encoded, sizeof(date_encoded));
     url_encode(authorization_b64, auth_encoded, sizeof(auth_encoded));
 
-    // 9. ¹¹½¨×îÖÕURL£¨²ÎÊıË³Ğò£ºauthorization, date, host£©
+    // 9. æ„å»ºæœ€ç»ˆURLï¼ˆå‚æ•°é¡ºåºï¼šauthorization, date, hostï¼‰
     int url_len = snprintf(out_url, max_len, "wss://%s%s?authorization=%s&date=%s&host=%s",
                            host, path, auth_encoded, date_encoded, host);
 
