@@ -25,6 +25,7 @@ C_DEPS :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 code \
+code/asr \
 libraries/infineon_libraries/Infra/Platform/Tricore/Compilers \
 libraries/infineon_libraries/Service/CpuGeneric/If \
 libraries/infineon_libraries/Service/CpuGeneric/StdIf \

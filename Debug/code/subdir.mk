@@ -9,7 +9,8 @@ C_SRCS += \
 ../code/integrate.c \
 ../code/meun.c \
 ../code/mode1.c \
-../code/run.c 
+../code/run.c \
+../code/wifi.c 
 
 OBJS += \
 ./code/GPS.o \
@@ -17,7 +18,8 @@ OBJS += \
 ./code/integrate.o \
 ./code/meun.o \
 ./code/mode1.o \
-./code/run.o 
+./code/run.o \
+./code/wifi.o 
 
 COMPILED_SRCS += \
 ./code/GPS.src \
@@ -25,7 +27,8 @@ COMPILED_SRCS += \
 ./code/integrate.src \
 ./code/meun.src \
 ./code/mode1.src \
-./code/run.src 
+./code/run.src \
+./code/wifi.src 
 
 C_DEPS += \
 ./code/GPS.d \
@@ -33,7 +36,8 @@ C_DEPS += \
 ./code/integrate.d \
 ./code/meun.d \
 ./code/mode1.d \
-./code/run.d 
+./code/run.d \
+./code/wifi.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

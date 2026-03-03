@@ -124,6 +124,9 @@
 #include "GPS.h"
 #include "mode1.h"
 #include "integrate.h"
+#include "wifi.h"
+#include "url_code.h"
+
 //=====================================================”√ªß≤„======================================================
 
 #endif
