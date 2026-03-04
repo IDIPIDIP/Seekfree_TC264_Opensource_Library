@@ -48,24 +48,14 @@ int core0_main(void)
     // 此处编写用户代码 例如外设初始化代码等
 
     init();
+    
 
 
     // 此处编写用户代码 例如外设初始化代码等
     cpu_wait_event_ready();         // 等待所有核心初始化完毕
     while (TRUE)
     {
-        // 此处编写需要循环执行的代码
-        tft180_show_string(0,0,"lat:");
-        tft180_show_float(0,8,gps_data.current_lat,3,3);
-        tft180_show_string(0,16,"lon:");
-        tft180_show_float(0,24,gps_data.current_lon,3,3);
-        tft180_show_string(0,32,"x:");
-        tft180_show_float(0,40,gps_data.current_x,3,3);
-        tft180_show_string(0,48,"y:");
-        tft180_show_float(0,56,gps_data.current_y,3,3);
-        tft180_show_float(0,64, gnss.latitude, 3, 6);      // 显示 gnss 中的原始纬度
-        tft180_show_float(0,72, gps_data.lat_zero, 3, 6);  
-    
+
 
 
         // 此处编写需要循环执行的代码

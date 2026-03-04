@@ -12,6 +12,10 @@
 #include "zf_common_headfile.h"
 
 #define ENCODER_PULSE_PER_REV 2048 //编码器每转的脉冲数
+#define KEY0_PIN 
+#define KEY1_PIN 
+#define KEY2_PIN 
+#define KEY3_PIN 
 
 extern int L_PWM_P;//左电机PWM频率
 extern int L_PWM_K;//左电机PWM占空比 =PWM_K/10000
