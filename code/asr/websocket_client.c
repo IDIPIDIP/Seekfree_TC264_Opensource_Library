@@ -1,38 +1,36 @@
 #include "zf_common_headfile.h"
 #include "websocket_client.h"
-#include "sha1.h"
 #include "base64.h"
-#include "asr_ctrl.h"
 
-extern char temp_data[10240];
+static char temp_data[10240];
 
-void url_encode(const char* str, char* encoded)
-{
-    const char* hex_chars = "0123456789ABCDEF";
-    size_t len = strlen(str);
-//    size_t encoded_len = 3 * len + 1; // 最坏情况下每个字符都编码
+// void url_encode(const char* str, char* encoded)
+// {
+//     const char* hex_chars = "0123456789ABCDEF";
+//     size_t len = strlen(str);
+// //    size_t encoded_len = 3 * len + 1; // 最坏情况下每个字符都编码
 
-    char* ptr = encoded;
-    for(size_t i = 0; i < len; i++)
-    {
-        unsigned char c = str[i];
-        if((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '-' || c == '_' || c == '.' || c == '~')
-        {
-            *ptr++ = c;
-        }
-        else if(c == ' ')
-        {
-            *ptr++ = '+'; // 将空格编码为 +
-        }
-        else
-        {
-            *ptr++ = '%';
-            *ptr++ = hex_chars[(c >> 4) & 0x0F];
-            *ptr++ = hex_chars[c & 0x0F];
-        }
-    }
-    *ptr = '\0';
-}
+//     char* ptr = encoded;
+//     for(size_t i = 0; i < len; i++)
+//     {
+//         unsigned char c = str[i];
+//         if((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '-' || c == '_' || c == '.' || c == '~')
+//         {
+//             *ptr++ = c;
+//         }
+//         else if(c == ' ')
+//         {
+//             *ptr++ = '+'; // 将空格编码为 +
+//         }
+//         else
+//         {
+//             *ptr++ = '%';
+//             *ptr++ = hex_chars[(c >> 4) & 0x0F];
+//             *ptr++ = hex_chars[c & 0x0F];
+//         }
+//     }
+//     *ptr = '\0';
+// }
 
 // 创建 WebSocket 握手请求
 static void create_handshake_request(const char* host, const char* path, const char* key, char* request)

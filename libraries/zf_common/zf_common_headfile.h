@@ -127,6 +127,9 @@
 #include "wifi.h"
 #include "url_code.h"
 #include "mic.h"
+#include "sha1.h"
+#include "base64.h"
+#include "websocket_client.h"
 
 //=====================================================”√ªß≤„======================================================
 

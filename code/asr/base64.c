@@ -1,5 +1,12 @@
 #include "base64.h"
 
+/**
+ * @brief Base64编码函数
+ * @param input 输入数据缓冲区
+ * @param output 输出Base64字符串缓冲区
+ * @param len 输入数据长度
+ * @return 返回生成的Base64字符串长度，0表示失败（如输出缓冲区不足）
+ */
 void base64_encode(uint8_t* input, char* output, uint32_t len)
 {
     static const char base64_table[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

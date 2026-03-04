@@ -6,7 +6,7 @@
 
 
 // url编码，去非法字符
-void url_encode(const char* str, char* encoded);
+// void url_encode(const char* str, char* encoded);
 // 连接到 WebSocket 服务器
 bool websocket_client_connect(const char* url);
 // 发送数据到 WebSocket 服务器

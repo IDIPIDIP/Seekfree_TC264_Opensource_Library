@@ -13,7 +13,7 @@ void mic_init(void)
     // 初始化ADC
     adc_init(ASR_AUDIO_ADC, ADC_12BIT);
     
-    // 初始化FIFO（16bit数据宽度）
+    // 初始化FIFO，16bit数据宽度
     fifo_init(&mic_module.fifo, 
               FIFO_DATA_16BIT, 
               (void *)mic_module.fifo_buffer, 
@@ -80,7 +80,7 @@ uint32 mic_fifo_level(void)
 }
 
 /**
- * @brief ISR处理函数 - 在PIT定时中断中被调用
+ * @brief ISR处理函数 - 在PIT定时中断中调用
  * 功能：读取ADC采样值并写入FIFO
  * @return 无
  */

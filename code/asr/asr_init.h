@@ -8,10 +8,6 @@
 // #define ASR_MIC_SAMPLE_RATE    8000            // 采样率 8kHz
 // #define ASR_MIC_FIFO_SIZE      2048            // FIFO缓冲区大小（样本数，16bit每个）
 
-extern void asr_init(void);
-extern void mic_init(void);
-extern uint16 mic_read(void);
-extern uint8 mic_fifo_read(uint16 *sample);
-extern uint32 mic_fifo_level(void);
+void asr_init(void);
 
 #endif /* CODE_ASR_INIT_H_ */

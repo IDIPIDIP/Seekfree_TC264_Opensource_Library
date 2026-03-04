@@ -13,6 +13,7 @@
 #define ASR_TARGET_IP           "ws-api.xfyun.cn"
 #define ASR_TARGET_PORT         "80"
 #define ASR_DOMAIN              "wss://ws-api.xfyun.cn/v2/iat"
+#define RANDOM_NUM_ADC          ADC0_CH5_A5                             // 使用ADC生成随机数
 // global buffers used by ASR module (defined in url_code.c)
 extern uint8_t     wifi_uart_get_data_buffer[1024];                    // wifi接收缓冲区
 extern char        http_request[1024];                                 // http协议缓冲区

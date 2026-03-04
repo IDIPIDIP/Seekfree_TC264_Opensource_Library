@@ -17,7 +17,7 @@ typedef struct {
     uint32_t state[8];
     uint64_t count;
     uint8_t buffer[64];
-} SHA256_CTX;
+} URL_SHA256_CTX;
 
 static const uint32_t sha256_k[64] = {
     0x428a2f98u, 0x71374491u, 0xb5c0fbcfu, 0xe9b5dba5u, 0x3956c25bu, 0x59f111f1u, 0x923f82a4u, 0xab1c5ed5u,
@@ -38,7 +38,7 @@ static const uint32_t sha256_k[64] = {
 #define SIG0(x) (ROR(x, 7) ^ ROR(x, 18) ^ ((x) >> 3))
 #define SIG1(x) (ROR(x, 17) ^ ROR(x, 19) ^ ((x) >> 10))
 
-static void sha256_transform(SHA256_CTX *ctx, const uint8_t *data)
+static void sha256_transform(URL_SHA256_CTX *ctx, const uint8_t *data)
 {
     uint32_t a, b, c, d, e, f, g, h, i, j, t1, t2, m[64];
 
@@ -80,7 +80,7 @@ static void sha256_transform(SHA256_CTX *ctx, const uint8_t *data)
     ctx->state[7] += h;
 }
 
-static void sha256_init(SHA256_CTX *ctx)
+static void sha256_init(URL_SHA256_CTX *ctx)
 {
     ctx->state[0] = 0x6a09e667u;
     ctx->state[1] = 0xbb67ae85u;
@@ -93,7 +93,7 @@ static void sha256_init(SHA256_CTX *ctx)
     ctx->count = 0;
 }
 
-static void sha256_update(SHA256_CTX *ctx, const uint8_t *data, uint32_t len)
+static void sha256_update(URL_SHA256_CTX *ctx, const uint8_t *data, uint32_t len)
 {
     uint32_t index = (ctx->count / 8) % 64;
     ctx->count += (len * 8);
@@ -116,7 +116,7 @@ static void sha256_update(SHA256_CTX *ctx, const uint8_t *data, uint32_t len)
     memcpy(&ctx->buffer[index], &data[i], (len - i));
 }
 
-static void sha256_final(SHA256_CTX *ctx, uint8_t *hash)
+static void sha256_final(URL_SHA256_CTX *ctx, uint8_t *hash)
 {
     uint8_t bits[8];
     uint32_t index = (ctx->count / 8) % 64;
@@ -146,7 +146,7 @@ static void sha256_final(SHA256_CTX *ctx, uint8_t *hash)
 // ==================== HMAC-SHA256 实现 ====================
 static void hmac_sha256(const uint8_t *key, uint32_t key_len, const uint8_t *data, uint32_t data_len, uint8_t *output)
 {
-    SHA256_CTX ctx;
+    URL_SHA256_CTX ctx;
     uint8_t k_ipad[64], k_opad[64], hash[32];
     int i;
 
@@ -189,7 +189,15 @@ static void hmac_sha256(const uint8_t *key, uint32_t key_len, const uint8_t *dat
 // ==================== Base64 编码实现 ====================
 static const char base64_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static uint32_t base64_encode(const uint8_t *input, uint32_t input_len, char *output, uint32_t output_size)
+/**
+ * @brief Base64编码函数
+ * @param input 输入数据缓冲区
+ * @param input_len 输入数据长度
+ * @param output 输出Base64字符串缓冲区
+ * @param output_size 输出缓冲区大小，建议至少 (4 * ((input_len + 2) / 3)) + 1 字节
+ * @return 返回生成的Base64字符串长度，0表示失败（如输出缓冲区不足）
+ */
+static uint32_t base64_encode_url(const uint8_t *input, uint32_t input_len, char *output, uint32_t output_size)
 {
     uint32_t out_len = 0;
     int i = 0;
@@ -366,7 +374,7 @@ uint32_t build_asr_auth_url(const char *host, const char *path, char *out_url, u
 
     // 5. Base64编码signature
     char signature_b64[64];
-    base64_encode(signature_sha, 32, signature_b64, sizeof(signature_b64));
+    base64_encode_url(signature_sha, 32, signature_b64, sizeof(signature_b64));
 
     // 6. 构建authorization_origin字符串
     //    格式: api_key="{api_key}", algorithm="hmac-sha256", headers="host date request-line", signature="{signature}"
@@ -377,7 +385,7 @@ uint32_t build_asr_auth_url(const char *host, const char *path, char *out_url, u
 
     // 7. Base64编码 authorization
     char authorization_b64[512];
-    uint32_t auth_len = base64_encode((const uint8_t*)authorization_origin, strlen(authorization_origin), authorization_b64, sizeof(authorization_b64));
+    uint32_t auth_len = base64_encode_url((const uint8_t*)authorization_origin, strlen(authorization_origin), authorization_b64, sizeof(authorization_b64));
 
     if (auth_len == 0)
         return 0;
