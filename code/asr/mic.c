@@ -11,8 +11,8 @@ mic_struct mic_module = {0};
 void mic_init(void)
 {
     // 初始化ADC
-    adc_init(ASR_AUDIO_ADC, ADC_12BIT);
-    
+    adc_init(ASR_AUDIO_ADC, ADC_12BIT);  //麦克风输入使用12位分辨率
+    adc_init(RANDOM_NUM_ADC, ADC_12BIT);           // 使用ADC生成随机数
     // 初始化FIFO，16bit数据宽度
     fifo_init(&mic_module.fifo, 
               FIFO_DATA_16BIT, 

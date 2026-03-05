@@ -324,6 +324,7 @@ void time_get_data(void)
 // 获取RFC1123格式的时间字符串
 static void get_rfc1123_time(char *time_str, uint32_t max_len)
 {
+    time_get_data(); // 从网络获取时间戳
     // 如果已通过网络获取时间，则直接使用
     if(network_time_valid && network_time_str[0] != '\0') {
         strncpy(time_str, network_time_str, max_len - 1);
@@ -331,21 +332,21 @@ static void get_rfc1123_time(char *time_str, uint32_t max_len)
         return;
     }
     
-    // 否则使用系统时间（备用方案）
-    time_t now = time(NULL);
-    struct tm *gmt = gmtime(&now);
+    // // 否则使用系统时间（备用方案）
+    // time_t now = time(NULL);
+    // struct tm *gmt = gmtime(&now);
 
-    const char *week[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    const char *month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    // const char *week[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    // const char *month[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-    snprintf(time_str, max_len, "%s, %02d %s %04d %02d:%02d:%02d GMT",
-             week[gmt->tm_wday],
-             gmt->tm_mday,
-             month[gmt->tm_mon],
-             gmt->tm_year + 1900,
-             gmt->tm_hour,
-             gmt->tm_min,
-             gmt->tm_sec);
+    // snprintf(time_str, max_len, "%s, %02d %s %04d %02d:%02d:%02d GMT",
+    //          week[gmt->tm_wday],
+    //          gmt->tm_mday,
+    //          month[gmt->tm_mon],
+    //          gmt->tm_year + 1900,
+    //          gmt->tm_hour,
+    //          gmt->tm_min,
+    //          gmt->tm_sec);
 }
 
 // ==================== 构建认证URL ====================

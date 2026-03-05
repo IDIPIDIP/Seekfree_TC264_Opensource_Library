@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
+../code/asr/asr.c \
 ../code/asr/asr_init.c \
 ../code/asr/base64.c \
 ../code/asr/hmac_sha256.c \
@@ -13,6 +14,7 @@ C_SRCS += \
 ../code/asr/websocket_client.c 
 
 OBJS += \
+./code/asr/asr.o \
 ./code/asr/asr_init.o \
 ./code/asr/base64.o \
 ./code/asr/hmac_sha256.o \
@@ -22,6 +24,7 @@ OBJS += \
 ./code/asr/websocket_client.o 
 
 COMPILED_SRCS += \
+./code/asr/asr.src \
 ./code/asr/asr_init.src \
 ./code/asr/base64.src \
 ./code/asr/hmac_sha256.src \
@@ -31,6 +34,7 @@ COMPILED_SRCS += \
 ./code/asr/websocket_client.src 
 
 C_DEPS += \
+./code/asr/asr.d \
 ./code/asr/asr_init.d \
 ./code/asr/base64.d \
 ./code/asr/hmac_sha256.d \

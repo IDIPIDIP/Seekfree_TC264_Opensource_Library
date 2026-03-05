@@ -45,7 +45,7 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
     interrupt_global_enable(0);                     // 开启中断嵌套
     pit_clear_flag(CCU60_CH0);
     runpoint(n_speed, dir);
-    
+    key_scanner();                                     // 按键扫描函数，放在定时器中断里可以保证按键扫描的周期稳定
     l_encoder = encoder_get_count(TIM2_ENCODER);encoder_clear_count(TIM2_ENCODER);
     r_encoder = encoder_get_count(TIM3_ENCODER);encoder_clear_count(TIM3_ENCODER);
     f_encoder = encoder_get_count(TIM4_ENCODER);encoder_clear_count(TIM4_ENCODER);

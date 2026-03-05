@@ -2,7 +2,7 @@
 #include "websocket_client.h"
 #include "base64.h"
 
-static char temp_data[10240];
+static char ws_temp_data[10240];
 
 // void url_encode(const char* str, char* encoded)
 // {
@@ -155,10 +155,10 @@ bool websocket_client_connect(const char* url)
 // 发送数据到 WebSocket 服务器
 bool websocket_client_send(const uint8_t* data, uint32_t len)
 {
-    memset(temp_data, 0, sizeof(temp_data));
-    uint32_t frame_len = websocket_create_frame((uint8*)temp_data, data, len, 1, 1); // 使用文本帧操作码
+    memset(ws_temp_data, 0, sizeof(ws_temp_data));
+    uint32_t frame_len = websocket_create_frame((uint8*)ws_temp_data, data, len, 1, 1); // 使用文本帧操作码
 
-    return wifi_uart_send_buffer((uint8*)temp_data, frame_len) == 0;
+    return wifi_uart_send_buffer((uint8*)ws_temp_data, frame_len) == 0;
 }
 
 bool websocket_client_receive(uint8_t* buffer)

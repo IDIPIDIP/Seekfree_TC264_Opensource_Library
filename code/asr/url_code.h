@@ -11,7 +11,7 @@
 #define ASR_WIFI_SSID           "ATCG"                                  // wifi名称 wifi需要是2.4G频率
 #define ASR_WIFI_PASSWORD       "QWERTYUI"                              // wifi密码
 #define ASR_TARGET_IP           "ws-api.xfyun.cn"
-#define ASR_TARGET_PORT         "80"
+#define ASR_TARGET_PORT         "80"                                    // 讯飞服务器端口，HTTP协议使用80，WebSocket使用443（加密）或80（非加密）
 #define ASR_DOMAIN              "wss://ws-api.xfyun.cn/v2/iat"
 #define RANDOM_NUM_ADC          ADC0_CH5_A5                             // 使用ADC生成随机数
 // global buffers used by ASR module (defined in url_code.c)

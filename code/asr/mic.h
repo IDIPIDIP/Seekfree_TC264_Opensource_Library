@@ -9,6 +9,7 @@
 #define ASR_MIC_SAMPLE_RATE    8000            // 采样率 8kHz
 #define ASR_MIC_FIFO_SIZE      3500            // FIFO缓冲区大小（样本数，16bit每个）
 #define ASR_SEND_DATA_MAX_LENTH     2500            // 每次发送的样本数，16bit每个
+#define ASR_BUTTON_PIN         P20_6           // 按一下开始录音，再按一下结束录音KEY1
 
 // 麦克风采样数据结构
 typedef struct
@@ -26,13 +27,13 @@ typedef struct
 extern mic_struct mic_module;// 全局麦克风结构体实例
 
 // 公开接口函数
-void mic_init(void);                                                // 初始化麦克风模块
-void mic_start(void);                                               // 启动采样
-void mic_stop(void);                                                // 停止采样
-int16 mic_read(void);                                              // 直接读取一个样本（阻塞式ADC）
+void mic_init(void);                                               // 初始化麦克风模块
+void mic_start(void);                                              // 启动采样
+void mic_stop(void);                                               // 停止采样
+int16 mic_read(void);                                              // 直接读取一个样本（阻塞式ADC），不要用
 fifo_state_enum mic_fifo_read(int16 *sample);                      // 从FIFO读取一个样本
-uint32 mic_fifo_level(void);                                        // 获取FIFO中的样本数
-void mic_sample_isr_handler(void);                                  // ISR中断处理器（PIT触发）
+uint32 mic_fifo_level(void);                                       // 获取FIFO中的样本数
+void mic_sample_isr_handler(void);                                 // ISR中断处理器（PIT触发）
 //mic_sample_isr_handler（）需要减去adc值的偏移量，得到实际的音频信号值
 
 #endif /* CODE_ASR_MIC_H_ */
@@ -41,7 +42,7 @@ void mic_sample_isr_handler(void);                                  // ISR中断
 // 可以通过 mic_fifo_read() 从 FIFO 中读取样本，或者直接调用 mic_read() 进行阻塞式读取。
 // 需要注意的是，mic_read() 不使用 FIFO，因此可能会丢失数据，而 mic_fifo_read() 则会从 FIFO 中读取数据并更新丢失样本计数。
 // 调用mic_fifo_read()
-// 结束时调用 mic_stop() 停止采样。一次用完后fifo_clear(&mic_module.fifo);停止采样时清空FIFO，避免下次使用时数据混乱。
+// 结束时调用 mic_stop() 停止采样。一次用完后不要fifo_clear(&mic_module.fifo)，读取完数据会清空fifo，直接用mic_fifo_read()读取数据就行
 
 
 /*

@@ -130,6 +130,8 @@
 #include "sha1.h"
 #include "base64.h"
 #include "websocket_client.h"
+#include "asr.h"
+#include "asr_init.h"
 
 //=====================================================”√ªß≤„======================================================
 

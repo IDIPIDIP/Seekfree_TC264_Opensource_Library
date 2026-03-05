@@ -27,10 +27,11 @@ void init()
     encoder_clear_count(TIM2_ENCODER);
     encoder_clear_count(TIM3_ENCODER);
     encoder_clear_count(TIM4_ENCODER);
-    pit_ms_init(CCU60_CH0, 10);
+    pit_ms_init(CCU60_CH0, 10);//定时器0，10ms中断一次，用于获取编码器和按键扫描
     gnss_init(TAU1201);
     tft180_init();
     tft180_set_font(TFT180_6X8_FONT);
+    key_init(10);//按键扫描周期10ms
     
 
 }
