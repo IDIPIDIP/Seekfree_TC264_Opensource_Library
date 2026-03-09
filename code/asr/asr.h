@@ -13,8 +13,12 @@ extern char        json_data[ASR_SEND_DATA_MAX_LENTH * 3];                     /
 extern char        temp_data[ASR_SEND_DATA_MAX_LENTH * 3 + 2000];              // 临时数据缓冲区
 extern uint8       websocket_receive_buffer[4096];                             // 接收websocket数据
 extern char        chinese_arry[500];                                          // 存储识别出的中文字符
+extern uint8       match_value;                                                // 字库匹配结果
 
+// 多字库匹配：0表示未命中，1~255表示不同字库返回值
+uint8 asr_match_multi_dictionary(const char *text);
 
+//返回识别结果中的中文字段，存储在chinese_arry[]中
 void asr();
 
 #endif /* CODE_ASR_H_ */
