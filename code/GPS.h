@@ -5,7 +5,7 @@
 #include "zf_common_headfile.h"
 
 #define GPS_POINT_MAX (40)
-#define MAX_FIT_POINTS (400) // 拟合点数最大值
+
 #define GPS_INIT_SAMPLE_COUNT           (10)  // GPS初始化时采集的有效样本数量 用于计算零漂
 #define GPS_INIT_MAX_PARSE_RETRY        (500) // GPS初始化时最大解析重试次数 避免死循环
 #define GPS_FLASH_SECTOR                (0)   // 使用第0扇区
@@ -46,7 +46,7 @@ extern struct GPS_point gps_point_data; // GPS采样点全局实例
 
 
 // GPS经纬度转投影
-void gps_to_diker(double latitude, double longitude);  // 单点经纬度转笛卡尔坐标，存到gps_data.current_x和gps_data.current_y中
+void gps_to_diker(double latitude, double longitude, int i);  // 单点经纬度转笛卡尔坐标，存到gps_data.current_x和gps_data.current_y中
 void gps_to_cartesian_all(void);                       // 所有采集点转笛卡尔坐标
 float get_yaw_angle(float x1, float y1, float x2, float y2);  // 计算偏航角
 float get_yaw_dis(float x1, float y1, float x2, float y2); // 计算投影坐标系中两点之间的距离

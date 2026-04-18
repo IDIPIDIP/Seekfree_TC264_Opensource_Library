@@ -26,9 +26,8 @@ extern struct pid_controller left_pid; // 左轮PID控制器
 extern struct pid_controller right_pid; // 右轮PID控制器
 
 //输入期望速度，dir1前进，2后退
-void runpoint(float n_speed,int dir);
-void Calculate_Differential_Speed(float turn_angle, float n_speed, struct out_motor_speed *out_motor_speed);
-//x:点的x坐标数组 y:点的y坐标数组 point_dis:每点间距（实际点间距会小） start_index:拟合点的起始索引
-void strline_fit(double *x, double *y, int point_dis,int start_index);
+//void runpoint(float n_speed,int dir);
+//void Calculate_Differential_Speed(float turn_angle, float n_speed, struct out_motor_speed *out_motor_speed);
+
 
 #endif /* CODE_TURN_H_ */

@@ -66,41 +66,91 @@ static bool parse_handshake_response(const char* response, const char* expected_
 // 连接到 WebSocket 服务器
 bool websocket_client_connect(const char* url)
 {
-    const char* protocol = "wss://";
-    if(strncmp(url, protocol, strlen(protocol)) != 0)
+    const char* host_start = NULL;
+    const char* path_start = NULL;
+    const char* port_pos = NULL;
+    char host[128];
+    char hostname[128];
+    char path[512];
+    char port[8] = "80";
+    size_t host_len;
+
+    if((NULL == url) || ('\0' == url[0]))
     {
         return false;
     }
 
-    const char* host_start = url + strlen(protocol);
-    const char* path_start = strchr(host_start, '/');
-    if(!path_start)
+    if(0 == strncmp(url, "wss://", 6))
     {
-        return false;
+        host_start = url + 6;
     }
-
-    char host[128], path[512];
-    char hostname[256];
-    memset(host, 0, sizeof(host));
-    memset(path, 0, sizeof(path));
-    memset(hostname, 0, sizeof(hostname));
-    strncpy(host, host_start, path_start - host_start);
-    host[path_start - host_start] = '\0';
-    strcpy(path, path_start);
-
-    // 提取主机和端口
-    const char* port_pos = strchr(host, ':');
-    if(port_pos)
+    else if(0 == strncmp(url, "ws://", 5))
     {
-        strncpy(hostname, host, port_pos - host);
-        hostname[port_pos - host] = '\0';
+        host_start = url + 5;
     }
     else
     {
+        return false;
+    }
+
+    path_start = strchr(host_start, '/');
+    if(NULL == path_start)
+    {
+        host_len = strlen(host_start);
+    }
+    else
+    {
+        host_len = (size_t)(path_start - host_start);
+    }
+
+    if((0 == host_len) || (host_len >= sizeof(host)))
+    {
+        return false;
+    }
+
+    memset(host, 0, sizeof(host));
+    memcpy(host, host_start, host_len);
+    host[host_len] = '\0';
+
+    if(NULL == path_start)
+    {
+        strcpy(path, "/");
+    }
+    else
+    {
+        if(strlen(path_start) >= sizeof(path))
+        {
+            return false;
+        }
+        strcpy(path, path_start);
+    }
+
+    // 提取主机和端口，优先使用URL中的端口
+    memset(hostname, 0, sizeof(hostname));
+    port_pos = strrchr(host, ':');
+    if((NULL != port_pos) && (port_pos != host))
+    {
+        size_t name_len = (size_t)(port_pos - host);
+        size_t port_len = strlen(port_pos + 1);
+        if((name_len >= sizeof(hostname)) || (0 == port_len) || (port_len >= sizeof(port)))
+        {
+            return false;
+        }
+        memcpy(hostname, host, name_len);
+        hostname[name_len] = '\0';
+        memcpy(port, port_pos + 1, port_len);
+        port[port_len] = '\0';
+    }
+    else
+    {
+        if(strlen(host) >= sizeof(hostname))
+        {
+            return false;
+        }
         strcpy(hostname, host);
     }
 
-    if(wifi_uart_connect_tcp_servers(hostname, "80", WIFI_UART_COMMAND))
+    if(wifi_uart_connect_tcp_servers(hostname, port, WIFI_UART_COMMAND))
     {
         printf("Failed to connect to TCP server");
         return false;
@@ -128,14 +178,14 @@ bool websocket_client_connect(const char* url)
     char handshake_request[1024];
     memset(handshake_request, 0, sizeof(handshake_request));
 
-    create_handshake_request(hostname, path, sec_websocket_key, handshake_request);
+    create_handshake_request(host, path, sec_websocket_key, handshake_request);
 
     wifi_uart_send_buffer((uint8_t*)handshake_request, strlen(handshake_request));
     system_delay_ms(1500);
     // 接收握手响应
     uint8_t handshake_response[1024];
     memset(handshake_response, 0, sizeof(handshake_response));
-    uint32_t bytes_received = wifi_uart_read_buffer(handshake_response, sizeof(handshake_response));
+    uint32_t bytes_received = wifi_uart_read_buffer(handshake_response, sizeof(handshake_response) - 1);
     if(bytes_received <= 0)
     {
         printf("Handshake receive failed");
@@ -171,7 +221,7 @@ bool websocket_client_receive(uint8_t* buffer)
     {
         bytes_count = 0;
         
-        for(int i = 0; i < bytes_count; i++)
+        for(int i = 0; i < bytes_count; i++)//bug，但没影响
         {
             if(buffer[i] == 0)
             {

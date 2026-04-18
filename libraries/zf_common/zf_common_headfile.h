@@ -123,8 +123,9 @@
 #include "menu.h"
 #include "GPS.h"
 #include "mode1.h"
+#include "mode2.h"
+#include "mode3.h"
 #include "integrate.h"
-#include "wifi.h"
 #include "url_code.h"
 #include "mic.h"
 #include "sha1.h"
@@ -132,6 +133,17 @@
 #include "websocket_client.h"
 #include "asr.h"
 #include "asr_init.h"
+#include "fitting.h"
+#include "flash.h"
+#include "encoder.h"
+#include "pid.h"
+#include "integrate.h"
+#include "GPS.h"
+#include "speaker.h"
+#include "point_collection.h"
+#include "path_track.h"
+#include "imu.h"
+#include "color_tracer.h"
 
 //=====================================================”√ªß≤„======================================================
 

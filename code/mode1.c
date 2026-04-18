@@ -1,38 +1,36 @@
 #include "zf_common_typedef.h"
 #include "zf_common_headfile.h"
 
-void mode1()//倒数两个点在车库中，用于倒车入库
+int mode1()//倒数4个点在车库中，用于倒车入库
 {
-    gps_to_cartesian_all();  // 转换所有采集的点
-    
-    for(int i=0;i<gps_point_data.point_num-1;i++)
+    flash_read_struct_toBuffer(0);//从flash中读取点到buffer_point结构体中
+    double x1[INTEGRATE_MAX_POINTS];
+    double y1[INTEGRATE_MAX_POINTS];
+    int use_num = buffer_point.point_num - 4;
+    for (int i = 0; i < use_num; i++)//除了最后四个点 其他点都用来拟合路径
     {
-        //计算当前点与下一个点的偏航角和距离，并根据偏航角调整速度差来引导车辆前进
-        Calculate_Differential_Speed(get_yaw_angle(integrate_point.current_x, integrate_point.current_y, integrate_point.x[i+1], integrate_point.y[i+1]), n_speed, &motor_speed);
-        if(i==gps_point_data.point_num-2)//留2点用于引导倒车入库
-        break;
+        x1[i] = buffer_point.x[i];
+        y1[i] = buffer_point.y[i];
     }
-    while(1)
+    set_control_mode(1); // 设置为自动模式
+    point_num=curve_fit(x1, y1, use_num, 0.1f, path_track_points_struct.x, path_track_points_struct.y, INTEGRATE_MAX_POINTS);
+    path_track_set_mode(0); // 设置为正向路径追踪模式
+    path_track_load_path(&path_track_points_struct); // 加载路径点数据到路径
+    path_track_start(); // 开始路径跟踪
+    while(track_satate==0)
+    {}
+    if(track_satate==1) //如果路径跟踪完成 则切换到倒车模式 继续跟踪剩余的4个点
     {
-        //如果当前点与一个点的角度小于3度，直接倒车
-    if(get_yaw_angle(integrate_point.current_x, integrate_point.current_y, integrate_point.x[gps_point_data.point_num-1], integrate_point.y[gps_point_data.point_num-1])<3.0f)
-    {
-       dir=0;
-       //如果当前点与下一个点的距离小于0.1m，停止
-       if(integrate_point.x[gps_point_data.point_num-2]-integrate_point.x[gps_point_data.point_num-1]<0.1f&&integrate_point.y[gps_point_data.point_num-2]-integrate_point.y[gps_point_data.point_num-1]<0.1f)
-        n_speed=0.0f;
-        break;
+        float reverse_x[4];
+        float reverse_y[4];
+        for (int i = 0; i < 4; i++)//最后四个点用来倒车入库
+        {
+            reverse_x[i] = buffer_point.x[buffer_point.point_num - 4 + i] - buffer_point.x[buffer_point.point_num - 5]; // 将最后四个点的x坐标转换为相对于倒车起点的坐标
+            reverse_y[i] = buffer_point.y[buffer_point.point_num - 4 + i] - buffer_point.y[buffer_point.point_num - 5]; // 将最后四个点的y坐标转换为相对于倒车起点的坐标
+        }
+        path_track_set_mode(1); // 设置为倒车路径追踪模式
+        point_num=curve_fit(reverse_x, reverse_y, 4, 0.1f, path_track_points_struct.x, path_track_points_struct.y, INTEGRATE_MAX_POINTS);
+        path_track_start();//结束函数写loop里了
     }
-    
-    else
-    {
-    
-       dir=1;
-       //如果当前位置与车库的角度大于3度，前进  
-        float temp_angle=get_yaw_angle(integrate_point.current_x, integrate_point.current_y, integrate_point.x[gps_point_data.point_num-1], integrate_point.y[gps_point_data.point_num-1]);
-        Calculate_Differential_Speed(get_yaw_angle(integrate_point.current_x, integrate_point.current_y, integrate_point.x[gps_point_data.point_num-1], integrate_point.y[gps_point_data.point_num-1]), n_speed, &motor_speed);
-    
-    }
-    }
-    
+    return 0;
 }

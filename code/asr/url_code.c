@@ -286,10 +286,10 @@ static void time_parse_data(char* input, char* time_str)
 void time_get_data(void)
 {
     // 初始化WiFi连接
-    while(wifi_uart_init(ASR_WIFI_SSID, ASR_WIFI_PASSWORD, WIFI_UART_STATION))
-    {
-        system_delay_ms(500);
-    }
+    // while(wifi_uart_init(ASR_WIFI_SSID, ASR_WIFI_PASSWORD, WIFI_UART_STATION))
+    // {
+    //     system_delay_ms(500);
+    // }
     
     // 连接到服务器
     while(wifi_uart_connect_tcp_servers(
@@ -397,8 +397,8 @@ uint32_t build_asr_auth_url(const char *host, const char *path, char *out_url, u
     url_encode(date_str, date_encoded, sizeof(date_encoded));
     url_encode(authorization_b64, auth_encoded, sizeof(auth_encoded));
 
-    // 9. 构建最终URL（参数顺序：authorization, date, host）
-    int url_len = snprintf(out_url, max_len, "wss://%s%s?authorization=%s&date=%s&host=%s",
+    // 9. 构建最终URL（参数顺序：host，path，authorization, date, host）
+    int url_len = snprintf(out_url, max_len, "ws://%s%s?authorization=%s&date=%s&host=%s",
                            host, path, auth_encoded, date_encoded, host);
 
     return (uint32_t)url_len;

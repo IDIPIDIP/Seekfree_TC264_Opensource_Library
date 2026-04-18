@@ -47,7 +47,15 @@ static const asr_dict_item_t g_asr_dict_table[] =
     {"逆时针转一圈", 24},
     {"顺时针转一圈", 25},
     {"左转", 26},
-    {"右转", 27}
+    {"右转", 27},
+    {"打开左转向灯", 28},
+    {"打开右转向灯",29},
+    {"打开远光灯",30},
+    {"打开近光灯",31},
+    {"打开雾灯",32},
+    {"打开双闪灯",33},
+    {"打开车内照明灯",34},
+    {"打开雨刷器",35}
 };
 
 /**
@@ -156,25 +164,31 @@ void extract_content_fields(const char* input)
  * @brief 语音识别主流程函数
  * 
  */
-void asr()
+uint8 asr()
 {
     uint8 match_value;
-
-    asr_init(); // 初始化ASR模块，连接WiFi
+    int get_state = 0;//麦克风采样状态，1表示正在采样，0表示停止采样
+    // asr_init(); // 初始化ASR模块，连接WiFi
+    if(0 == build_asr_auth_url(ASR_TARGET_IP, ASR_DOMAIN, asr_url_out, sizeof(asr_url_out))) // URL构建
+    {
+        //printf("URL构建失败\r\n");
+        return 0;
+    }
     memset(chinese_arry, 0, sizeof(chinese_arry));
     //printf("按ASR_BUTTON_PIN开始录音，再按ASR_BUTTON_PIN结束录音\r\n");
     key_clear_all_state(); // 清除按键状态，准备监听按键事件
-    if(key_get_state(ASR_BUTTON_PIN) == KEY_SHORT_PRESS) // 等待ASR_BUTTON_PIN短按事件，开始录音
+    while(key_get_state(KEY_1) != KEY_SHORT_PRESS)
+    {
+        system_delay_ms(100); // 等待按键事件，避免CPU占用过高
+    }
+    if(key_get_state(KEY_1) == KEY_SHORT_PRESS) // 等待ASR_BUTTON_PIN短按事件，开始录音
     {
         mic_start(); // 启动麦克风采样
+        get_state = 1;
         while(1)
         {
-            if(key_get_state(ASR_BUTTON_PIN) == KEY_SHORT_PRESS) // 再次ASR_BUTTON_PIN短按事件，结束录音
-            {
-                mic_stop(); // 停止麦克风采样
-                break;
-
-            }
+            while(mic_module.send_flag==0) // 等待麦克风模块设置发送标志
+            {system_delay_ms(100);}
             if(mic_module.send_flag) // 当麦克风模块设置发送标志时，读取FIFO数据并发送
             {          
             while(!websocket_client_connect(asr_url_out))
@@ -182,14 +196,18 @@ void asr()
                     //printf("服务器连接失败\n");
                     system_delay_ms(500); // 初始化失败，等待 500ms
                 }
-                
             //printf("服务器连接成功，开始识别语音，最长识别时长为60秒，可手动按键停止\r\n");
             // 语音数据第一帧数据包编码
             audio_data_send(0);
             // 发送第一帧数据包
             websocket_client_send((uint8_t*)json_data, strlen(json_data));
-            while(fifo_used(&mic_module.fifo_buffer) != 0)// 等待FIFO中数据被发送完毕
+            while(fifo_used(&mic_module.fifo_buffer) != 0||get_state == 1)// 等待FIFO中数据被发送完毕
             {
+                if(key_get_state(KEY_1) == KEY_SHORT_PRESS) // 再次ASR_BUTTON_PIN短按事件，结束录音
+            {
+                mic_stop(); // 停止麦克风采样
+                get_state=0;
+            }
             // 语音数据中间帧数据包编码
             audio_data_send(1);
             // 发送中间帧数据包
@@ -201,26 +219,23 @@ void asr()
             // 解析语音结果
             extract_content_fields((const char*)websocket_receive_buffer); 
             mic_module.send_flag = 0; // 发送完成后清除发送标志
-            }   
+            }
             // 语音数据结束帧数据包
             audio_data_send(2);
             // 发送结束帧数据包
             websocket_client_send((uint8_t*)json_data, strlen(json_data));
             // 等待语音结果
             system_delay_ms(1000);
-            // 接收语音结果 
+            // 接收语音结果
             websocket_client_receive(websocket_receive_buffer);
             // 解析语音结果
             extract_content_fields((const char*)websocket_receive_buffer);
 
             match_value = asr_match_multi_dictionary(chinese_arry);
+            return match_value;
             //printf("asr text:%s\n", chinese_arry);
             //printf("asr dict value:%d\n", match_value);
-
-                
             }
-            
         }
     }
-    
 }

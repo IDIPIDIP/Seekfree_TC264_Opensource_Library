@@ -56,7 +56,7 @@ int getpoint()
     {
         gps_point_data.lat[gps_point_data.point_num] = gnss.latitude;
         gps_point_data.lon[gps_point_data.point_num] = gnss.longitude;
-
+        gps_to_diker(gps_point_data.lat[gps_point_data.point_num], gps_point_data.lon[gps_point_data.point_num],gps_point_data.point_num);
         gps_point_data.point_num++;
         return 1;
     }
@@ -71,7 +71,7 @@ int getpoint()
  * @param latitude 纬度
  * @param longitude 经度
  */
-void gps_to_diker(double latitude , double longitude)
+void gps_to_diker(double latitude , double longitude,int i)
 {
     double dis = 0 , angle = 0;
     //计算发车点位与实时点位之间的距离  Home_x:经度 Home_y:纬度
@@ -79,8 +79,8 @@ void gps_to_diker(double latitude , double longitude)
     //计算发车点位与实时点位之间的方位角
     angle = get_two_points_azimuth(gps_data.lat_home , gps_data.lon_home , latitude , longitude);
     //分解到XY轴上
-    gps_data.current_x = dis * cos(angle / 180 * 3.1415926);
-    gps_data.current_y = dis * sin(angle / 180 * 3.1415926);
+    gps_point_data.gps_x[i] = dis * cos(angle / 180 * 3.1415926);
+    gps_point_data.gps_y[i] = dis * sin(angle / 180 * 3.1415926);
 }
 
 /**
