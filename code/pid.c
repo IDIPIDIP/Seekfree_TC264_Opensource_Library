@@ -369,6 +369,70 @@ void set_control_mode(uint8 mode)
     control_mode=mode;
 }
 
+
+PID_Struct_info color_track_pid_x; // X-axis PID: horizontal error -> target steering angle
+PID_Struct_info color_track_pid_y; // Y-axis PID: vertical error   -> target vehicle speed
+
+//-------------------------------------------------------------------------------------------------------------------
+// Function:    pid_color_track_init
+// Description: Initialise X and Y PID controllers used for visual color-block centering
+//-------------------------------------------------------------------------------------------------------------------
+void pid_color_track_init(void)
+{
+    // X-axis: steer left/right to center block horizontally (pixel error -> steering angle in deg)
+    color_track_pid_x.Kp             = COLOR_TRACK_KP_X;
+    color_track_pid_x.Ki             = COLOR_TRACK_KI_X;
+    color_track_pid_x.Kd             = COLOR_TRACK_KD_X;
+    color_track_pid_x.integral_limit = COLOR_TRACK_INT_LIMIT_X;
+    color_track_pid_x.output_limit   = COLOR_TRACK_OUT_LIMIT_X;
+    color_track_pid_x.error          = 0.0f;
+    color_track_pid_x.last_error     = 0.0f;
+    color_track_pid_x.integral       = 0.0f;
+    color_track_pid_x.output         = 0.0f;
+    color_track_pid_x.current_value  = 0.0f;
+    color_track_pid_x.differential   = 0.0f;
+    color_track_pid_x.set            = 0.0f;
+
+    // Y-axis: adjust speed to keep block at vertical center (pixel error -> speed in m/s)
+    color_track_pid_y.Kp             = COLOR_TRACK_KP_Y;
+    color_track_pid_y.Ki             = COLOR_TRACK_KI_Y;
+    color_track_pid_y.Kd             = COLOR_TRACK_KD_Y;
+    color_track_pid_y.integral_limit = COLOR_TRACK_INT_LIMIT_Y;
+    color_track_pid_y.output_limit   = COLOR_TRACK_OUT_LIMIT_Y;
+    color_track_pid_y.error          = 0.0f;
+    color_track_pid_y.last_error     = 0.0f;
+    color_track_pid_y.integral       = 0.0f;
+    color_track_pid_y.output         = 0.0f;
+    color_track_pid_y.current_value  = 0.0f;
+    color_track_pid_y.differential   = 0.0f;
+    color_track_pid_y.set            = 0.0f;
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// Function:    pid_color_track_update
+// Parameter:   block_x  Current X coordinate of tracked color block (0 = left, SCC8660_W-1 = right)
+// Parameter:   block_y  Current Y coordinate of tracked color block (0 = top,  SCC8660_H-1 = bottom)
+// Description: X-axis PID steers the vehicle left/right to center the block horizontally.
+//              Y-axis PID adjusts speed so the block stays at vertical center
+//              (block above center -> move forward to close in; below center -> slow down).
+//              Call set_control_mode(1) before using this function.
+//-------------------------------------------------------------------------------------------------------------------
+void pid_color_track_update(int block_x, int block_y)
+{
+    // X-axis: current = CENTER_X, target = block_x  =>  error = block_x - CENTER_X
+    // Positive error (block right of center) -> positive output -> steer right
+    color_track_pid_x.current_value = (float)COLOR_TRACK_CENTER_X;
+    pid_update(&color_track_pid_x, (float)block_x);
+    set_target_steering_angle(color_track_pid_x.output);
+
+    // Y-axis: current = block_y, target = CENTER_Y  =>  error = CENTER_Y - block_y
+    // Positive error (block above center = far away) -> positive output -> move forward
+    color_track_pid_y.current_value = (float)block_y;
+    pid_update(&color_track_pid_y, (float)COLOR_TRACK_CENTER_Y);
+    set_target_speed(color_track_pid_y.output);
+}
+
+
 void pid_loop(void)
 {
     if(pid_init_flag==0)

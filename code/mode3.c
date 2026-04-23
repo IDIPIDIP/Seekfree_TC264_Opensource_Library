@@ -13,17 +13,21 @@ void mode3(void)//中心对准目标色块，按key1确认目标颜色
     tft180_show_string(25,1,"s max");tft180_show_uint(25,31,target_color_condi.s_max,3);
     tft180_show_string(33,2,"l min");tft180_show_uint(33,31,target_color_condi.l_min,3);
     tft180_show_string(41,2,"l max");tft180_show_uint(41,31,target_color_condi.l_max,3);
+
+    pid_color_track_init();  // Initialise color tracking PID controllers
+    set_control_mode(1);     // Enable auto-steering mode (steering angle driven by PID)
+
     while(1)
     {
-        color_trace(&target_color_condi, &target_pos_out);//x0-159 y0-119
-        if(target_pos_out.x>83)//目标在中心右侧
+        if(color_trace(&target_color_condi, &target_pos_out)) // x: 0-159  y: 0-119
         {
-            
+            // Block found: run PID to steer and accelerate so the block stays at frame center
+            pid_color_track_update((int)target_pos_out.x, (int)target_pos_out.y);
         }
-        else if(target_pos_out.x<77)//目标在中心左侧
+        else
         {
-            
+            // Block lost: stop the vehicle (steering angle holds its current value)
+            set_target_speed(0);
         }
-        
     }
 }
