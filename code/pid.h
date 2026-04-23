@@ -75,7 +75,7 @@ void set_control_mode(uint8 mode);
 #define COLOR_TRACK_INT_LIMIT_X 50.0f   // X-axis integral saturation limit
 #define COLOR_TRACK_OUT_LIMIT_X PID_STEERING_MAX_ANGLE  // X-axis output limit (degrees)
 // Y-axis PID (vertical error -> vehicle speed output)
-#define COLOR_TRACK_KP_Y        0.05f   // P gain: 60 px error -> 3 m/s
+#define COLOR_TRACK_KP_Y        0.05f   // P gain: 60 px error -> 3 m/s (saturates at COLOR_TRACK_OUT_LIMIT_Y)
 #define COLOR_TRACK_KI_Y        0.00f   // I gain: not needed for visual tracking
 #define COLOR_TRACK_KD_Y        0.01f   // D gain: dampens speed oscillation
 #define COLOR_TRACK_INT_LIMIT_Y 2.0f    // Y-axis integral saturation limit (m/s)

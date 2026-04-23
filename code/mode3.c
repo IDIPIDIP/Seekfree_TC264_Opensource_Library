@@ -19,7 +19,7 @@ void mode3(void)//中心对准目标色块，按key1确认目标颜色
 
     while(1)
     {
-        if(color_trace(&target_color_condi, &target_pos_out)) // x: 0-159  y: 0-119
+        if(color_trace(&target_color_condi, &target_pos_out)) // x: 0-(SCC8660_W-1)  y: 0-(SCC8660_H-1)
         {
             // Block found: run PID to steer and accelerate so the block stays at frame center
             pid_color_track_update((int)target_pos_out.x, (int)target_pos_out.y);

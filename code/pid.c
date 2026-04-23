@@ -419,14 +419,27 @@ void pid_color_track_init(void)
 //-------------------------------------------------------------------------------------------------------------------
 void pid_color_track_update(int block_x, int block_y)
 {
-    // X-axis: current = CENTER_X, target = block_x  =>  error = block_x - CENTER_X
-    // Positive error (block right of center) -> positive output -> steer right
+    // X-axis steering:
+    //   pid_update() computes  error = target - current_value.
+    //   By setting current_value = CENTER_X and target = block_x we get
+    //     error = block_x - CENTER_X
+    //   This convention is intentional: a positive error (block is to the RIGHT of center)
+    //   produces a positive PID output which maps to a positive steering angle (turn RIGHT),
+    //   bringing the block back toward the center.
     color_track_pid_x.current_value = (float)COLOR_TRACK_CENTER_X;
     pid_update(&color_track_pid_x, (float)block_x);
     set_target_steering_angle(color_track_pid_x.output);
 
-    // Y-axis: current = block_y, target = CENTER_Y  =>  error = CENTER_Y - block_y
-    // Positive error (block above center = far away) -> positive output -> move forward
+    // Y-axis speed:
+    //   Camera coordinate: y = 0 at the TOP of the frame, increases downward.
+    //   For a forward-facing camera on a ground vehicle, objects that are further away
+    //   appear closer to the TOP of the frame (smaller y value).
+    //   Setting current_value = block_y and target = CENTER_Y gives
+    //     error = CENTER_Y - block_y
+    //   Positive error (block_y < CENTER_Y = object above center = far away)
+    //   -> positive output -> move forward to close the distance.
+    //   Negative error (block_y > CENTER_Y = object below center = too close)
+    //   -> negative output -> slow down or reverse.
     color_track_pid_y.current_value = (float)block_y;
     pid_update(&color_track_pid_y, (float)COLOR_TRACK_CENTER_Y);
     set_target_speed(color_track_pid_y.output);
