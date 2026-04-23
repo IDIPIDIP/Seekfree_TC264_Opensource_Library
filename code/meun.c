@@ -3,13 +3,17 @@
 
 void menu(void)
 {
+    // tft180_clear();
+    // tft180_show_string(1,1,"key1 start");
+    // tft180_show_string(9,1,"key2 ");
+    // tft180_show_string(25,1,"key4 point");
+    while (1)
+    {
     tft180_clear();
     tft180_show_string(1,1,"key1 start");
     tft180_show_string(9,1,"key2 ");
-    // tft180_show_string(17,1,"mode3 key3");
     tft180_show_string(25,1,"key4 point");
-    while (1)
-    {
+    //key1准备科目
     if(key_get_state(KEY_1) == KEY_SHORT_PRESS)
     {
         key_clear_state(KEY_1);
@@ -19,23 +23,30 @@ void menu(void)
         tft180_show_string(17,1,"mode3 key3");
         while(1)
         {
-            if(key_get_state(KEY_1) == KEY_SHORT_PRESS)//key1进入mode1
+            tft180_clear();
+            tft180_show_string(1,1,"mode1 key1");
+            tft180_show_string(9,1,"mode2 key2");
+            tft180_show_string(17,1,"mode3 key3");
+            //key1进入mode1
+            if(key_get_state(KEY_1) == KEY_SHORT_PRESS)
             {
                 key_clear_state(KEY_1);
                 while(mode1() != 0);//路径ID为0
                 break;
             }
-            if(key_get_state(KEY_2) == KEY_SHORT_PRESS)//key2进入mode2
+            //key2进入mode2
+            if(key_get_state(KEY_2) == KEY_SHORT_PRESS)
             {
+                key_clear_state(KEY_2);
                 asr_init();//语音识别初始化
                 while(1)
                 {
-                key_clear_state(KEY_2);
                 tft180_clear();
                 tft180_show_string(1,1,"key1 mode2_1");
                 tft180_show_string(9,1,"key2 mode2_2");
                 tft180_show_string(17,1,"key3 mode2_3");
                 tft180_show_string(25,1,"key4 mode2_4");
+                tft180_show_string(33,1,"long key1 exit");
                 if(key_get_state(KEY_1) == KEY_SHORT_PRESS)//key1进入mode2_1
                 {
                     key_clear_state(KEY_1);
@@ -56,7 +67,8 @@ void menu(void)
                     key_clear_state(KEY_4);
                     mode2_4();
                 }
-                if(key_get_state(KEY_1) == KEY_LONG_PRESS)//key1长按退出mode2
+                //key1长按退出mode2
+                if(key_get_state(KEY_1) == KEY_LONG_PRESS)
                 {
                     key_clear_state(KEY_1);
                     wifi_uart_disconnected_wifi();
@@ -95,6 +107,7 @@ void menu(void)
         tft180_show_string(9,1,"key2 to read");//key2进入读取mode，先选择ID，按1增加ID，按2减少ID，按3确认ID并读取flash
         tft180_show_string(17,1,"key3 to exit");//key3退出
         tft180_show_string(25,1,"key4 to ");
+        gps_point_data.point_num=0;
         while(1)
         {
             //KEY1采点
@@ -108,7 +121,7 @@ void menu(void)
             if(key_get_state(KEY_2) == KEY_SHORT_PRESS)//进入后先输入ID，按1增加ID，按2减少ID，按3确认ID并读取flash
             {
                 key_clear_state(KEY_2);
-                uint8 read_id = (uint8)SUBJECT_ONE_BEGIN;
+                int read_id = 0;
                 tft180_clear();
                 tft180_show_string(1,1,"key1 to add ID");
                 tft180_show_string(9,1,"key2 to sub ID");

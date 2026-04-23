@@ -13,6 +13,7 @@ void mode3(void)//中心对准目标色块，按key1确认目标颜色
     tft180_show_string(25,1,"s max");tft180_show_uint(25,31,target_color_condi.s_max,3);
     tft180_show_string(33,2,"l min");tft180_show_uint(33,31,target_color_condi.l_min,3);
     tft180_show_string(41,2,"l max");tft180_show_uint(41,31,target_color_condi.l_max,3);
+    
     while(1)
     {
         color_trace(&target_color_condi, &target_pos_out);//x0-159 y0-119
