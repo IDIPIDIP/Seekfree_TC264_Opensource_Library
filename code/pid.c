@@ -370,16 +370,16 @@ void set_control_mode(uint8 mode)
 }
 
 
-PID_Struct_info color_track_pid_x; // X-axis PID: horizontal error -> target steering angle
-PID_Struct_info color_track_pid_y; // Y-axis PID: vertical error   -> target vehicle speed
+PID_Struct_info color_track_pid_x; // X 轴 PID：水平误差 -> 目标转向角
+PID_Struct_info color_track_pid_y; // Y 轴 PID：垂直误差 -> 目标车速
 
 //-------------------------------------------------------------------------------------------------------------------
-// Function:    pid_color_track_init
-// Description: Initialise X and Y PID controllers used for visual color-block centering
+// 函数名:    pid_color_track_init
+// 功能说明:  初始化视觉色块居中控制所需的 X/Y 两个 PID
 //-------------------------------------------------------------------------------------------------------------------
 void pid_color_track_init(void)
 {
-    // X-axis: steer left/right to center block horizontally (pixel error -> steering angle in deg)
+    // X 轴：通过左右转向使色块水平居中（像素误差 -> 转向角，单位度）
     color_track_pid_x.Kp             = COLOR_TRACK_KP_X;
     color_track_pid_x.Ki             = COLOR_TRACK_KI_X;
     color_track_pid_x.Kd             = COLOR_TRACK_KD_X;
@@ -393,7 +393,7 @@ void pid_color_track_init(void)
     color_track_pid_x.differential   = 0.0f;
     color_track_pid_x.set            = 0.0f;
 
-    // Y-axis: adjust speed to keep block at vertical center (pixel error -> speed in m/s)
+    // Y 轴：通过调节车速使色块在垂直方向居中（像素误差 -> 速度，单位 m/s）
     color_track_pid_y.Kp             = COLOR_TRACK_KP_Y;
     color_track_pid_y.Ki             = COLOR_TRACK_KI_Y;
     color_track_pid_y.Kd             = COLOR_TRACK_KD_Y;
@@ -409,37 +409,37 @@ void pid_color_track_init(void)
 }
 
 //-------------------------------------------------------------------------------------------------------------------
-// Function:    pid_color_track_update
-// Parameter:   block_x  Current X coordinate of tracked color block (0 = left, SCC8660_W-1 = right)
-// Parameter:   block_y  Current Y coordinate of tracked color block (0 = top,  SCC8660_H-1 = bottom)
-// Description: X-axis PID steers the vehicle left/right to center the block horizontally.
-//              Y-axis PID adjusts speed so the block stays at vertical center
-//              (block above center -> move forward to close in; below center -> slow down).
-//              Call set_control_mode(1) before using this function.
+// 函数名:    pid_color_track_update
+// 参数说明:  block_x  当前跟踪到的色块 X 坐标（0=最左，SCC8660_W-1=最右）
+// 参数说明:  block_y  当前跟踪到的色块 Y 坐标（0=最上，SCC8660_H-1=最下）
+// 功能说明:  X 轴 PID 控制车辆左右转向，使色块在水平方向回到中心。
+//            Y 轴 PID 控制速度，使色块在垂直方向保持在中心。
+//            （色块在中心上方 -> 前进靠近；在中心下方 -> 减速或后退）
+//            使用本函数前需先调用 set_control_mode(1)。
 //-------------------------------------------------------------------------------------------------------------------
 void pid_color_track_update(int block_x, int block_y)
 {
-    // X-axis steering:
-    //   pid_update() computes  error = target - current_value.
-    //   By setting current_value = CENTER_X and target = block_x we get
+    // X 轴转向控制：
+    //   pid_update() 内部计算公式为：error = target - current_value。
+    //   当 current_value = CENTER_X、target = block_x 时，得到：
     //     error = block_x - CENTER_X
-    //   This convention is intentional: a positive error (block is to the RIGHT of center)
-    //   produces a positive PID output which maps to a positive steering angle (turn RIGHT),
-    //   bringing the block back toward the center.
+    //   该符号约定是有意为之：误差为正（色块在中心右侧）时，
+    //   PID 输出为正，对应正转向角（向右转），
+    //   从而把色块拉回画面中心。
     color_track_pid_x.current_value = (float)COLOR_TRACK_CENTER_X;
     pid_update(&color_track_pid_x, (float)block_x);
     set_target_steering_angle(color_track_pid_x.output);
 
-    // Y-axis speed:
-    //   Camera coordinate: y = 0 at the TOP of the frame, increases downward.
-    //   For a forward-facing camera on a ground vehicle, objects that are further away
-    //   appear closer to the TOP of the frame (smaller y value).
-    //   Setting current_value = block_y and target = CENTER_Y gives
+    // Y 轴速度控制：
+    //   摄像头坐标系约定：y=0 在画面顶部，y 向下增大。
+    //   对于地面车辆前向安装摄像头，距离更远的目标通常会
+    //   出现在更靠上的位置（y 更小）。
+    //   当 current_value = block_y、target = CENTER_Y 时，得到：
     //     error = CENTER_Y - block_y
-    //   Positive error (block_y < CENTER_Y = object above center = far away)
-    //   -> positive output -> move forward to close the distance.
-    //   Negative error (block_y > CENTER_Y = object below center = too close)
-    //   -> negative output -> slow down or reverse.
+    //   误差为正（block_y < CENTER_Y，即目标在中心上方、距离偏远）
+    //   -> 输出为正 -> 车辆前进以接近目标。
+    //   误差为负（block_y > CENTER_Y，即目标在中心下方、距离偏近）
+    //   -> 输出为负 -> 车辆减速或后退。
     color_track_pid_y.current_value = (float)block_y;
     pid_update(&color_track_pid_y, (float)COLOR_TRACK_CENTER_Y);
     set_target_speed(color_track_pid_y.output);
