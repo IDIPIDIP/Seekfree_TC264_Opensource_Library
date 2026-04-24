@@ -64,4 +64,29 @@ void pid_motion_control(float target_speed, float target_steering_angle, uint8 c
 void set_target_steering_angle(float angle);
 void set_target_speed(float speed);
 void set_control_mode(uint8 mode);
+
+// 色块视觉跟随 PID - 使识别到的色块保持在摄像头画面中心
+#define COLOR_TRACK_CENTER_X    80      // 摄像头水平中心点 (SCC8660_W / 2)
+#define COLOR_TRACK_CENTER_Y    60      // 摄像头垂直中心点 (SCC8660_H / 2)
+// X 轴 PID（水平误差 -> 转向角输出）
+#define COLOR_TRACK_KP_X        0.35f   // 比例项：80 像素误差约对应 28 度最大转向
+#define COLOR_TRACK_KI_X        0.00f   // 积分项：视觉跟随通常不需要
+#define COLOR_TRACK_KD_X        0.10f   // 微分项：抑制转向振荡
+#define COLOR_TRACK_INT_LIMIT_X 50.0f   // X 轴积分限幅
+#define COLOR_TRACK_OUT_LIMIT_X PID_STEERING_MAX_ANGLE  // X 轴输出限幅（度）
+// Y 轴 PID（垂直误差 -> 车速输出）
+#define COLOR_TRACK_KP_Y        0.05f   // 比例项：60 像素误差约对应 3 m/s（超过时按输出限幅）
+#define COLOR_TRACK_KI_Y        0.00f   // 积分项：视觉跟随通常不需要
+#define COLOR_TRACK_KD_Y        0.01f   // 微分项：抑制速度振荡
+#define COLOR_TRACK_INT_LIMIT_Y 2.0f    // Y 轴积分限幅（m/s）
+#define COLOR_TRACK_OUT_LIMIT_Y 3.0f    // Y 轴输出限幅（m/s）
+
+extern PID_Struct_info color_track_pid_x;   // X 轴 PID：水平误差 -> 目标转向角
+extern PID_Struct_info color_track_pid_y;   // Y 轴 PID：垂直误差 -> 目标车速
+
+// 初始化色块跟随 PID 控制器
+void pid_color_track_init(void);
+// 更新色块跟随 PID 并输出到车辆控制（每帧调用一次）
+void pid_color_track_update(int block_x, int block_y);
+
 #endif /* CODE_PID_H_ */

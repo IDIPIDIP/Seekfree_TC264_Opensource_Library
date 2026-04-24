@@ -369,6 +369,83 @@ void set_control_mode(uint8 mode)
     control_mode=mode;
 }
 
+
+PID_Struct_info color_track_pid_x; // X 轴 PID：水平误差 -> 目标转向角
+PID_Struct_info color_track_pid_y; // Y 轴 PID：垂直误差 -> 目标车速
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数名:    pid_color_track_init
+// 功能说明:  初始化视觉色块居中控制所需的 X/Y 两个 PID
+//-------------------------------------------------------------------------------------------------------------------
+void pid_color_track_init(void)
+{
+    // X 轴：通过左右转向使色块水平居中（像素误差 -> 转向角，单位度）
+    color_track_pid_x.Kp             = COLOR_TRACK_KP_X;
+    color_track_pid_x.Ki             = COLOR_TRACK_KI_X;
+    color_track_pid_x.Kd             = COLOR_TRACK_KD_X;
+    color_track_pid_x.integral_limit = COLOR_TRACK_INT_LIMIT_X;
+    color_track_pid_x.output_limit   = COLOR_TRACK_OUT_LIMIT_X;
+    color_track_pid_x.error          = 0.0f;
+    color_track_pid_x.last_error     = 0.0f;
+    color_track_pid_x.integral       = 0.0f;
+    color_track_pid_x.output         = 0.0f;
+    color_track_pid_x.current_value  = 0.0f;
+    color_track_pid_x.differential   = 0.0f;
+    color_track_pid_x.set            = 0.0f;
+
+    // Y 轴：通过调节车速使色块在垂直方向居中（像素误差 -> 速度，单位 m/s）
+    color_track_pid_y.Kp             = COLOR_TRACK_KP_Y;
+    color_track_pid_y.Ki             = COLOR_TRACK_KI_Y;
+    color_track_pid_y.Kd             = COLOR_TRACK_KD_Y;
+    color_track_pid_y.integral_limit = COLOR_TRACK_INT_LIMIT_Y;
+    color_track_pid_y.output_limit   = COLOR_TRACK_OUT_LIMIT_Y;
+    color_track_pid_y.error          = 0.0f;
+    color_track_pid_y.last_error     = 0.0f;
+    color_track_pid_y.integral       = 0.0f;
+    color_track_pid_y.output         = 0.0f;
+    color_track_pid_y.current_value  = 0.0f;
+    color_track_pid_y.differential   = 0.0f;
+    color_track_pid_y.set            = 0.0f;
+}
+
+//-------------------------------------------------------------------------------------------------------------------
+// 函数名:    pid_color_track_update
+// 参数说明:  block_x  当前跟踪到的色块 X 坐标（0=最左，SCC8660_W-1=最右）
+// 参数说明:  block_y  当前跟踪到的色块 Y 坐标（0=最上，SCC8660_H-1=最下）
+// 功能说明:  X 轴 PID 控制车辆左右转向，使色块在水平方向回到中心。
+//            Y 轴 PID 控制速度，使色块在垂直方向保持在中心。
+//            （色块在中心上方 -> 前进靠近；在中心下方 -> 减速或后退）
+//            使用本函数前需先调用 set_control_mode(1)。
+//-------------------------------------------------------------------------------------------------------------------
+void pid_color_track_update(int block_x, int block_y)
+{
+    // X 轴转向控制：
+    //   pid_update() 内部计算公式为：error = target - current_value。
+    //   当 current_value = CENTER_X、target = block_x 时，得到：
+    //     error = block_x - CENTER_X
+    //   该符号约定是有意为之：误差为正（色块在中心右侧）时，
+    //   PID 输出为正，对应正转向角（向右转），
+    //   从而把色块拉回画面中心。
+    color_track_pid_x.current_value = (float)COLOR_TRACK_CENTER_X;
+    pid_update(&color_track_pid_x, (float)block_x);
+    set_target_steering_angle(color_track_pid_x.output);
+
+    // Y 轴速度控制：
+    //   摄像头坐标系约定：y=0 在画面顶部，y 向下增大。
+    //   对于地面车辆前向安装摄像头，距离更远的目标通常会
+    //   出现在更靠上的位置（y 更小）。
+    //   当 current_value = block_y、target = CENTER_Y 时，得到：
+    //     error = CENTER_Y - block_y
+    //   误差为正（block_y < CENTER_Y，即目标在中心上方、距离偏远）
+    //   -> 输出为正 -> 车辆前进以接近目标。
+    //   误差为负（block_y > CENTER_Y，即目标在中心下方、距离偏近）
+    //   -> 输出为负 -> 车辆减速或后退。
+    color_track_pid_y.current_value = (float)block_y;
+    pid_update(&color_track_pid_y, (float)COLOR_TRACK_CENTER_Y);
+    set_target_speed(color_track_pid_y.output);
+}
+
+
 void pid_loop(void)
 {
     if(pid_init_flag==0)
