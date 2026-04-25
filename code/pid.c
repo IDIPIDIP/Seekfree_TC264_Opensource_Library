@@ -419,10 +419,6 @@ void pid_color_track_init(void)
 //-------------------------------------------------------------------------------------------------------------------
 void pid_color_track_update(int block_x, int block_y)
 {
-    // X 轴转向控制：
-    //   pid_update() 内部计算公式为：error = target - current_value。
-    //   当 current_value = CENTER_X、target = block_x 时，得到：
-    //     error = block_x - CENTER_X
     //   该符号约定是有意为之：误差为正（色块在中心右侧）时，
     //   PID 输出为正，对应正转向角（向右转），
     //   从而把色块拉回画面中心。
@@ -430,12 +426,6 @@ void pid_color_track_update(int block_x, int block_y)
     pid_update(&color_track_pid_x, (float)block_x);
     set_target_steering_angle(color_track_pid_x.output);
 
-    // Y 轴速度控制：
-    //   摄像头坐标系约定：y=0 在画面顶部，y 向下增大。
-    //   对于地面车辆前向安装摄像头，距离更远的目标通常会
-    //   出现在更靠上的位置（y 更小）。
-    //   当 current_value = block_y、target = CENTER_Y 时，得到：
-    //     error = CENTER_Y - block_y
     //   误差为正（block_y < CENTER_Y，即目标在中心上方、距离偏远）
     //   -> 输出为正 -> 车辆前进以接近目标。
     //   误差为负（block_y > CENTER_Y，即目标在中心下方、距离偏近）
