@@ -4,3 +4,5 @@
 
 meun.o :	../code/meun.c
 ../code/meun.c :
+meun.o :	../code/menu.h
+../code/menu.h :

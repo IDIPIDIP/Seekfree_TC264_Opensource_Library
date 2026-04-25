@@ -7,6 +7,7 @@ void mode3(void)  // 色块追踪模式：通过画面中心采样设置目标颜色条件
     // 通过画面中心的像素来设置颜色识别条件
     while(!set_color_target_condi(scc8660_image[SCC8660_H / 2][SCC8660_W / 2], &target_color_condi));
     tft180_clear();
+    // 显示设置的颜色条件，供调试使用
     tft180_show_string(1,1,"h min");tft180_show_uint(1,31,target_color_condi.h_min,3);
     tft180_show_string(9,1,"h max");tft180_show_uint(9,31,target_color_condi.h_max,3);
     tft180_show_string(17,1,"s min");tft180_show_uint(17,31,target_color_condi.s_min,3);

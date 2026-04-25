@@ -174,6 +174,7 @@ uint8 asr()
         //printf("URL构建失败\r\n");
         return 0;
     }
+    //wifi_uart_send_buffer("111", 3); // 发送准备就绪信号给主控，主控收到后会连接服务器
     memset(chinese_arry, 0, sizeof(chinese_arry));
     //printf("按ASR_BUTTON_PIN开始录音，再按ASR_BUTTON_PIN结束录音\r\n");
     key_clear_all_state(); // 清除按键状态，准备监听按键事件
@@ -232,9 +233,11 @@ uint8 asr()
             extract_content_fields((const char*)websocket_receive_buffer);
 
             match_value = asr_match_multi_dictionary(chinese_arry);
-            return match_value;
+            
             //printf("asr text:%s\n", chinese_arry);
             //printf("asr dict value:%d\n", match_value);
+            wifi_uart_send_buffer(match_value, sizeof(match_value));
+            return match_value;
             }
         }
     }
