@@ -54,7 +54,6 @@ int core0_main(void)
     pit_ms_init(CCU60_CH1, 5);//定时器0，5ms中断一次，用于获取编码器和按键扫描
 
     asr_init();
-
     
     //init();                          // 初始化函数，包含了编码器、GNSS等外设的初始化
    

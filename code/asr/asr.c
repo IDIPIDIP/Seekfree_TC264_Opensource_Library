@@ -189,83 +189,80 @@ uint8 asr()
     while(key_get_state(KEY_1) != KEY_SHORT_PRESS)
     {
         tft180_show_string(1, 9, "Press KEY1");
-        system_delay_ms(100); // 等待按键事件，避免CPU占用过高
+        system_delay_ms(2); // 等待按键事件，2ms 轮询以捕获 5ms 的短按窗口
     }
     
     tft180_clear();
     tft180_show_string(1, 1, "Pressed KEY1");
-    if(key_get_state(KEY_1) == KEY_SHORT_PRESS) // 等待ASR_BUTTON_PIN短按事件，开始录音
-    {
-        tft180_clear();
-        tft180_show_string(1, 1, "Listening...");
-        tft180_show_string(1, 9, "press KEY1 stop");
-        key_clear_all_state(); // 清除按键状态，准备下一次监听
-        mic_start(); // 启动麦克风采样
-        get_state = 1;
+    tft180_clear();
+    tft180_show_string(1, 1, "Listening...");
+    tft180_show_string(1, 9, "press KEY1 stop");
+    key_clear_all_state(); // 清除按键状态，准备下一次监听
+    mic_start(); // 启动麦克风采样
+    get_state = 1;
 
-        while(1)
+    while(1)
+    {
+        while(mic_module.send_flag==0) // 等待麦克风模块设置发送标志
+        {system_delay_ms(100);
+        int i=1;
+        tft180_show_int(1,17,i,2);
+        i++;
+        }
+        if(mic_module.send_flag) // 当麦克风模块设置发送标志时，读取FIFO数据并发送
         {
-            while(mic_module.send_flag==0) // 等待麦克风模块设置发送标志
-            {system_delay_ms(100);
-            int i=1;
-            tft180_show_int(1,17,i,2);
-            i++;
-            }
-            if(mic_module.send_flag) // 当麦克风模块设置发送标志时，读取FIFO数据并发送
+            uint8 ws_retry_count = 0;
+            while(!websocket_client_connect(asr_url_out))
             {
-                uint8 ws_retry_count = 0;
-                while(!websocket_client_connect(asr_url_out))
+                tft180_show_string(1,17,"Retry connect");
+                ws_retry_count++;
+                if(ASR_WS_CONNECT_RETRY_MAX <= ws_retry_count)
                 {
-                    tft180_show_string(1,17,"Retry connect");
-                    ws_retry_count++;
-                    if(ASR_WS_CONNECT_RETRY_MAX <= ws_retry_count)
-                    {
-                        tft180_show_string(1,17,"Socket failed");
-                        return 0;
-                    }
-                    // system_delay_ms(500); // 初始化失败，等待 500ms
+                    tft180_show_string(1,17,"Socket failed");
+                    return 0;
                 }
-                tft180_show_string(1,17,"Socket ready");
-                // 语音数据第一帧数据包编码
-                audio_data_send(0);
-                // 发送第一帧数据包
-                websocket_client_send((uint8_t*)json_data, strlen(json_data));
-                while(fifo_used(&mic_module.fifo_buffer) != 0||get_state == 1)// 等待FIFO中数据被发送完毕
+                // system_delay_ms(500); // 初始化失败，等待 500ms
+            }
+            tft180_show_string(1,17,"Socket ready");
+            // 语音数据第一帧数据包编码
+            audio_data_send(0);
+            // 发送第一帧数据包
+            websocket_client_send((uint8_t*)json_data, strlen(json_data));
+            while(fifo_used(&mic_module.fifo_buffer) != 0||get_state == 1)// 等待FIFO中数据被发送完毕
+            {
+                if(key_get_state(KEY_1) == KEY_SHORT_PRESS) // 再次ASR_BUTTON_PIN短按事件，结束录音
                 {
-                    if(key_get_state(KEY_1) == KEY_SHORT_PRESS) // 再次ASR_BUTTON_PIN短按事件，结束录音
-                    {
-                        mic_stop(); // 停止麦克风采样
-                        get_state=0;
-                    }
-                    // 语音数据中间帧数据包编码
-                    audio_data_send(1);
-                    // 发送中间帧数据包
-                    websocket_client_send((uint8_t*)json_data, strlen(json_data));
-                    // 等待语音结果
-                    system_delay_ms(300);
-                    // 接收语音结果
-                    websocket_client_receive(websocket_receive_buffer);
-                    // 解析语音结果
-                    extract_content_fields((const char*)websocket_receive_buffer);
-                    mic_module.send_flag = 0; // 发送完成后清除发送标志
+                    mic_stop(); // 停止麦克风采样
+                    get_state=0;
                 }
-                // 语音数据结束帧数据包
-                audio_data_send(2);
-                // 发送结束帧数据包
+                // 语音数据中间帧数据包编码
+                audio_data_send(1);
+                // 发送中间帧数据包
                 websocket_client_send((uint8_t*)json_data, strlen(json_data));
                 // 等待语音结果
-                system_delay_ms(1000);
+                system_delay_ms(300);
                 // 接收语音结果
                 websocket_client_receive(websocket_receive_buffer);
                 // 解析语音结果
                 extract_content_fields((const char*)websocket_receive_buffer);
-
-                match_value = asr_match_multi_dictionary(chinese_arry);
-
-                //printf("asr text:%s\n", chinese_arry);
-                //printf("asr dict value:%d\n", match_value);
-                return match_value;
+                mic_module.send_flag = 0; // 发送完成后清除发送标志
             }
+            // 语音数据结束帧数据包
+            audio_data_send(2);
+            // 发送结束帧数据包
+            websocket_client_send((uint8_t*)json_data, strlen(json_data));
+            // 等待语音结果
+            system_delay_ms(1000);
+            // 接收语音结果
+            websocket_client_receive(websocket_receive_buffer);
+            // 解析语音结果
+            extract_content_fields((const char*)websocket_receive_buffer);
+
+            match_value = asr_match_multi_dictionary(chinese_arry);
+
+            //printf("asr text:%s\n", chinese_arry);
+            //printf("asr dict value:%d\n", match_value);
+            return match_value;
         }
     }
 
