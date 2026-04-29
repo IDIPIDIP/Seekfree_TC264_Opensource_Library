@@ -29,12 +29,13 @@ void init()
     encoder_clear_count(TIM2_ENCODER);
     encoder_clear_count(TIM3_ENCODER);
     encoder_clear_count(TIM4_ENCODER);
-    pit_ms_init(CCU60_CH0, 5);//定时器0，5ms中断一次，用于获取编码器和按键扫描
+    pit_ms_init(CCU60_CH1, 5);//定时器0，5ms中断一次，用于获取编码器和按键扫描
+    // pit_us_init(CCU60_CH0, 125); // 初始化PIT定时器，125us周期 = 8kHz采样率
     gnss_init(TAU1201);
     tft180_init();
     tft180_set_font(TFT180_6X8_FONT);
     key_init(10);//按键扫描周期10ms
     scc8660_init();//摄像头初始化
-    
+    // system_delay_init();            // 初始化延时函数
 
 }

@@ -22,9 +22,9 @@ extern struct integrate integrate_point;// 融合点全局实例
  * @param x_imu IMU 曲线 x 数组（长度 n）
  * @param y_imu IMU 曲线 y 数组（长度 n）
  * @param n 融合输入点数（同索引一一对应），范围 1 ~ INTEGRATE_MAX_POINTS
- * @return 成功返回写入点数 n；失败返回 0
  */
-int integrate(const float *x_gps, const float *y_gps,const float *x_imu, const float *y_imu, int n);
+int integrate(const float *x_gps, const float *y_gps,const float *x_imu,
+             const float *y_imu, int n);
 
 /**
  * @brief 使用自定义噪声参数进行卡尔曼融合。
@@ -40,8 +40,8 @@ int integrate(const float *x_gps, const float *y_gps,const float *x_imu, const f
  * @note 建议：
  * process_q=0.001f, gps_r=0.5f, imu_r=1.5f
  */
-int integrate_with_noise(const float *x_gps, const float *y_gps,const float *x_imu, const float *y_imu, int n,
-                         float process_q, float gps_r, float imu_r);
+int integrate_with_noise(const float *x_gps, const float *y_gps,const float *x_imu,
+                         const float *y_imu, int n,float process_q, float gps_r, float imu_r);
 
 
 #endif /* CODE_TINTEGRATE_H_ */

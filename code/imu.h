@@ -45,10 +45,12 @@ void IMU_Init(void);
 void IMU_Get_Data(void);
 void IMU_Update_Attitude(void);
 void IMU_offest_Init(void);
-void IMU_Offest_Compensate(IMU_param_t *Data,IMU_zero_offest_t *Gyro_Offest,IMU_zero_offest_t *Acc_Offest,IMU_zero_offest_t *Mag_Offest);
+void IMU_Offest_Compensate(IMU_param_t *Data,IMU_zero_offest_t *Gyro_Offest,
+                IMU_zero_offest_t *Acc_Offest,IMU_zero_offest_t *Mag_Offest);
 float IMU_Get_Yaw_TrueNorth(void);
 void IMU_Set_Magnetic_Declination(float declination_deg);
-void MahonyAHRSupdate(float gx, float gy, float gz, float ax, float ay, float az,float mx,float my,float mz);
+void MahonyAHRSupdate(float gx, float gy, float gz, float ax, float ay,
+                     float az,float mx,float my,float mz);
 float invSqrt(float x);
 
 #endif

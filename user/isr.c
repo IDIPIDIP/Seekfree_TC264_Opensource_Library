@@ -44,12 +44,7 @@ IFX_INTERRUPT(cc60_pit_ch0_isr, 0, CCU6_0_CH0_ISR_PRIORITY)
 {
     interrupt_global_enable(0);                     // 开启中断嵌套
     pit_clear_flag(CCU60_CH0);
-    key_scanner();      // 按键扫描函数，放在定时器中断里可以保证按键扫描的周期稳定
-    encoder_loop();     // 编码器数据采集函数，5ms
-    path_track_loop();  // 路径跟踪主循环函数
-    pid_motion_control(target_speed, target_steering_angle, control_mode);//PID运动控制函数，根据目标速度、目标转向角度和控制模式计算输出并控制电机
-    IMU_Get_Data();    // IMU数据采集函数,5ms
-    IMU_Update_Attitude(); // IMU姿态更新函数,5ms
+    
     mic_sample_isr_handler();     // 麦克风采样中断处理
 
 }
@@ -59,7 +54,22 @@ IFX_INTERRUPT(cc60_pit_ch1_isr, 0, CCU6_0_CH1_ISR_PRIORITY)
 {
     interrupt_global_enable(0);                     // 开启中断嵌套
     pit_clear_flag(CCU60_CH1);
-    
+    key_scanner();      // 按键扫描函数，放在定时器中断里可以保证按键扫描的周期稳定
+    static volatile uint32 a = 0;
+    static volatile uint32 b = 0;
+    a++;
+    if(a > 200)
+    {
+    a = 0;
+    b++;
+    }
+    tft180_show_uint(1, 49, a, 5);
+    tft180_show_uint(1, 57, b, 5);
+    // encoder_loop();     // 编码器数据采集函数，5ms
+    // path_track_loop();  // 路径跟踪主循环函数
+    // pid_motion_control(target_speed, target_steering_angle, control_mode);//PID运动控制函数，根据目标速度、目标转向角度和控制模式计算输出并控制电机
+    // IMU_Get_Data();    // IMU数据采集函数,5ms
+    // IMU_Update_Attitude(); // IMU姿态更新函数,5ms
     
 
 }

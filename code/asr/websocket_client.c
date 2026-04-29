@@ -150,8 +150,9 @@ bool websocket_client_connect(const char* url)
         strcpy(hostname, host);
     }
 
-    if(wifi_uart_connect_tcp_servers(hostname, port, WIFI_UART_COMMAND))
+    if(wifi_spi_socket_connect("TCP", hostname, port, WIFI_SPI_LOCAL_PORT))
     {
+        tft180_show_string(1, 25, "TCP connect err");
         printf("Failed to connect to TCP server");
         return false;
     }
@@ -180,14 +181,15 @@ bool websocket_client_connect(const char* url)
 
     create_handshake_request(host, path, sec_websocket_key, handshake_request);
 
-    wifi_uart_send_buffer((uint8_t*)handshake_request, strlen(handshake_request));
+    wifi_spi_send_buffer((uint8_t*)handshake_request, strlen(handshake_request));
     system_delay_ms(1500);
     // 接收握手响应
     uint8_t handshake_response[1024];
     memset(handshake_response, 0, sizeof(handshake_response));
-    uint32_t bytes_received = wifi_uart_read_buffer(handshake_response, sizeof(handshake_response) - 1);
+    uint32_t bytes_received = wifi_spi_read_buffer(handshake_response, sizeof(handshake_response) - 1);
     if(bytes_received <= 0)
     {
+        tft180_show_string(1, 25, "Handshake rx err");
         printf("Handshake receive failed");
         return false;
     }
@@ -195,10 +197,12 @@ bool websocket_client_connect(const char* url)
     // 验证握手响应
     if(!parse_handshake_response((char*)handshake_response, sec_websocket_accept))
     {
+        tft180_show_string(1, 25, "Handshake fail");
         return false;
     }
 
     // 更新客户端状态
+    tft180_show_string(1, 25, "Handshake ok");
     return true;
 }
 
@@ -208,14 +212,14 @@ bool websocket_client_send(const uint8_t* data, uint32_t len)
     memset(ws_temp_data, 0, sizeof(ws_temp_data));
     uint32_t frame_len = websocket_create_frame((uint8*)ws_temp_data, data, len, 1, 1); // 使用文本帧操作码
 
-    return wifi_uart_send_buffer((uint8*)ws_temp_data, frame_len) == 0;
+    return wifi_spi_send_buffer((uint8*)ws_temp_data, frame_len) == 0;
 }
 
 bool websocket_client_receive(uint8_t* buffer)
 {
     static int bytes_count = 0;
     memset(buffer, 0, 4096);
-    uint32_t bytes_received = wifi_uart_read_buffer(buffer, 4096);
+    uint32_t bytes_received = wifi_spi_read_buffer(buffer, 4096);
     bytes_count += bytes_received;
     if(bytes_count > 50)
     {
@@ -239,7 +243,7 @@ bool websocket_client_receive(uint8_t* buffer)
 // 关闭 WebSocket 连接
 void websocket_client_close()
 {
-    wifi_uart_disconnect_link(); // 断开 TCP 连接
+    wifi_spi_socket_disconnect(); // 断开 TCP 连接
 }
 
 // WebSocket 数据帧创建函数

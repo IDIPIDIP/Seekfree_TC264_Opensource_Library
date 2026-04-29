@@ -46,17 +46,39 @@ int core0_main(void)
     clock_init();                   // 获取时钟频率<务必保留>
     debug_init();                   // 初始化默认调试串口
     // 此处编写用户代码 例如外设初始化代码等
-    // asr_init();
+    system_delay_init();            // 初始化延时函数
+    tft180_init();                   // TFT180 初始化
+    tft180_set_font(TFT180_6X8_FONT); // 设置 TFT180 字体
+    key_init(5);                   // 初始化按键，扫描周期5ms
+    pit_us_init(CCU60_CH0, 125); // 初始化PIT定时器，125us周期 = 8kHz采样率
+    pit_ms_init(CCU60_CH1, 5);//定时器0，5ms中断一次，用于获取编码器和按键扫描
+
+    asr_init();
+
     
+    //init();                          // 初始化函数，包含了编码器、GNSS等外设的初始化
+   
+
+    int a;
+
+    char network_time_str[64];
 
     // 此处编写用户代码 例如外设初始化代码等
     cpu_wait_event_ready();         // 等待所有核心初始化完毕
     while (TRUE)
     {
-        // asr(); // 语音识别主循环函数，包含了连接服务器、发送音频数据、接收识别结果等功能
-
-
+        a=asr(); // 语音识别主循环函数，包含了连接服务器、发送音频数据、接收识别结果等功能
+        while(1)
+        {
+        tft180_show_int(1, 1, a, 3); // TFT180 显示整数
+        if(key_get_state(KEY_1) == KEY_SHORT_PRESS)
+            {
+                key_clear_state(KEY_1);
+                break;
+            }
+        }
         // 此处编写需要循环执行的代码
+
     }
 }
 

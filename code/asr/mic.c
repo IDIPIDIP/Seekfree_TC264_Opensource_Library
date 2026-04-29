@@ -16,9 +16,8 @@ void mic_init(void)
     // 初始化FIFO，16bit数据宽度
     fifo_init(&mic_module.fifo, 
               FIFO_DATA_16BIT, 
-              (void *)mic_module.fifo_buffer, 
-              sizeof(mic_module.fifo_buffer));
-    
+              mic_module.fifo_buffer, 
+              2500);
     // 初始化采样状态
     mic_module.enabled = 0;
     mic_module.lost_samples = 0;
@@ -32,10 +31,10 @@ void mic_start(void)
 {
     if (mic_module.enabled)
         return;
-    
+    // mic_sample_isr_handler() 仅在 mic_flag == 0 时执行采样
+    mic_flag = 0;
     // 配置PIT定时器，125us周期 = 8kHz采样率
-    pit_us_init(ASR_PIT, 125);
-    pit_start(ASR_PIT);
+
     
     mic_module.enabled = 1;
 }
@@ -46,9 +45,9 @@ void mic_start(void)
  */
 void mic_stop(void)
 {
-    pit_close(ASR_PIT);
+
     mic_module.enabled = 0;
- 
+    mic_flag = 0xFF; //麦克风停止采样
 }
 
 /**
@@ -86,6 +85,7 @@ uint32 mic_fifo_level(void)
  */
 void mic_sample_isr_handler(void)
 {
+    if(mic_flag!= 0)return;//麦克风未准备好，直接返回，0开始，非0不采样
     int16 sample;
     fifo_state_enum ret;
     
@@ -101,7 +101,7 @@ void mic_sample_isr_handler(void)
     else
     {
         mic_module.audio_count++;//增加计数
-        ret = fifo_write_element(&mic_module.fifo, sample);
+        ret = fifo_write_element(&mic_module.fifo, (uint32)sample);
     
         // FIFO满时计数丢失样本
         if (ret == FIFO_SPACE_NO_ENOUGH)

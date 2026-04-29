@@ -141,12 +141,12 @@ static void menu_render_main(void)
 {
     tft180_clear();
     tft180_show_string(1, 1, "key1 start");
-    tft180_show_string(9, 1, "key4 point");
-    tft180_show_string(17, 1, "main menu");
+    tft180_show_string(1, 9, "key4 point");
+    tft180_show_string(1, 17, "main menu");
     if(g_has_read_notice)
     {
-        tft180_show_string(25, 1, "read id");
-        tft180_show_int(25, 33, g_last_read_id, 2);
+        tft180_show_string(1, 25, "read id");
+        tft180_show_int(43, 25, g_last_read_id, 2);
     }
 }
 
@@ -223,7 +223,7 @@ static void menu_action_mode2_enter(void)
 // 离开 mode2 子菜单时释放资源。
 static void menu_action_mode2_exit(void)
 {
-    wifi_uart_disconnected_wifi();
+    wifi_spi_socket_disconnect();
 }
 
 // 执行 mode2_1，返回后强制重绘当前页面。
