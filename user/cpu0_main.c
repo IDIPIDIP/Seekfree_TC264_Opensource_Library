@@ -54,6 +54,19 @@ int core0_main(void)
     pit_ms_init(CCU60_CH1, 5);//定时器0，5ms中断一次，用于获取编码器和按键扫描
 
     asr_init();
+    if(0 == WIFI_SPI_AUTO_CONNECT)                                              // 如果没有开启自动连接 就需要手动连接目标 IP
+    {
+        while(wifi_spi_socket_connect(                                          // 向指定目标 IP 的端口建立 TCP 连接
+            "TCP",                                                              // 指定使用TCP方式通讯
+            WIFI_SPI_TARGET_IP,                                                      // 指定远端的IP地址，填写上位机的IP地址
+            WIFI_SPI_TARGET_PORT,                                                    // 指定远端的端口号，填写上位机的端口号，通常上位机默认是8080
+            WIFI_SPI_LOCAL_PORT))                                                   // 指定本机的端口号
+        {
+            // 如果一直建立失败 考虑一下是不是没有接硬件复位
+            tft180_show_string(1, 1, "Connect TCP Servers err");
+            system_delay_ms(100);                                               // 建立连接失败 等待 100ms
+        }
+    }
     
     //init();                          // 初始化函数，包含了编码器、GNSS等外设的初始化
    

@@ -353,8 +353,13 @@ static uint8 time_get_data(const char *target_host, const char *target_port)
 
     asr_show_time_step("Time SPI geting");
     memset(network_time_str, 0, sizeof(network_time_str));
-    return_state = wifi_spi_get_time(WIFI_SPI_GMT, network_time_str, (uint8)sizeof(network_time_str));
-
+    while(wifi_spi_get_time(WIFI_SPI_GMT, network_time_str, (uint8)sizeof(network_time_str)))
+    {
+        asr_show_time_step("Time SPI retry");
+        system_delay_ms(500);
+        return_state=1;
+    }
+    return_state=0;
     if((0 == return_state) && (network_time_str[0] != '\0'))
     {
         asr_show_time_step("Time ok");

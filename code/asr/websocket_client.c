@@ -153,7 +153,7 @@ bool websocket_client_connect(const char* url)
     if(wifi_spi_socket_connect("TCP", hostname, port, WIFI_SPI_LOCAL_PORT))
     {
         tft180_show_string(1, 25, "TCP connect err");
-        printf("Failed to connect to TCP server");
+        wifi_spi_send_string("Failed to connect to xf server");
         return false;
     }
 
@@ -194,6 +194,17 @@ bool websocket_client_connect(const char* url)
         return false;
     }
     handshake_response[bytes_received] = '\0';
+
+    // 打印握手响应和预期的 Sec-WebSocket-Accept 值
+    wifi_spi_send_string("Handshake response:\n");
+    wifi_spi_send_buffer(handshake_response, bytes_received);
+    tft180_show_string(1, 25, "Handshake response:");//
+    tft180_show_string(1, 33, handshake_response);//可能超数
+    wifi_spi_send_string("\nExpected accept: ");
+    wifi_spi_send_string(sec_websocket_accept);
+    wifi_spi_send_string("\n");
+
+    
     // 验证握手响应
     if(!parse_handshake_response((char*)handshake_response, sec_websocket_accept))
     {
